@@ -1,0 +1,11 @@
+{
+  "name": "archol",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/thr0w/archol.git",
+  "author": "thr0w <josefernandotolentino@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "typescript": "^3.9.5"
+  }
+}
