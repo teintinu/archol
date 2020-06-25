@@ -145,6 +145,14 @@ export interface UseFunction {
   },
 }
 
+export interface Workspace {
+  outDir: string
+  builders: {
+    [name: string]: Builder
+  },
+  getApp(name: string): Promise<Application>
+}
+
 export interface Builder {
-  build(app: Application): Promise<void>
+  build(ws: Workspace, app: Application): Promise<void>
 }

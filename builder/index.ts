@@ -1,5 +1,4 @@
-import { Application } from "./types";
-import { Workspace } from "./ws";
+import { Workspace, Application } from "./types";
 import * as fs from "fs";
 import { resolve, join } from 'path'
 import util from 'util';
@@ -12,6 +11,7 @@ const rootDir = resolve(__dirname + '../../../..')
 console.log(rootDir)
 
 const ws: Workspace = {
+  outDir: rootDir+'/.temp/out',
   builders: {
     "express-mongo": expressMongo,
     "pwa-react": pwaReact,

@@ -1,10 +1,14 @@
-import { Workspace } from "./ws";
-import { Application } from "./types";
+import { Workspace, Application } from "./types";
 
 export async function buildApp(ws: Workspace, app: Application) {
-  for (const builderName of app.builders) {
+  const all = app.builders.map(async (builderName) => {
     const builder = ws.builders[builderName]
-    if (!builder) throw new Error('invalid builder: ' + builderName)
-    await builder.build(app)
-  }
+    if (builder) {
+      console.log(builderName + ': building ' + builderName)
+      await builder.build(ws, app)
+      console.log(builderName + ': built ' + builderName)
+    }
+    else console.log(builderName + ': invalid builder: ' + builderName)
+  })
+  await Promise.all(all)
 }
