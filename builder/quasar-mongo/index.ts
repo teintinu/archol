@@ -5,7 +5,7 @@ import { writeFile } from '../sys';
 
 export const quasarMongo: Builder = {
   async build(ws, app, cfg) {
-    const outDir = join(ws.rootDir, cfg.outDir, app.name, 'server')
+    const outDir = join(ws.rootDir, cfg.rootDir, app.name, 'server')
     indexTs()
     indexHtml()
     function indexTs() {

@@ -165,5 +165,5 @@ export interface Builder {
 }
 
 export interface BuilderConfig {
-  outDir: string
+  rootDir: string
 }
