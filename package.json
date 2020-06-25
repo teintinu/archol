@@ -7,8 +7,8 @@
   "license": "MIT",
   "scripts": {
     "generate-hw": "tsc -p . && node .temp/dist/builder/index",
-    "generate-app-schema": "npx typescript-to-json-schema --path builder/types.ts --type Application > schemas/app.json",
-    "generate-pkg-schema": "npx typescript-to-json-schema --path builder/types.ts --type Package > schemas/pkg.json",
+    "generate-app-schema": "npx typescript-to-json-schema --path builder/typesDecl.ts --type Application > schemas/app.json",
+    "generate-pkg-schema": "npx typescript-to-json-schema --path builder/typesDecl.ts --type Package > schemas/pkg.json",
     "generate-schemas": "npm run generate-pkg-schema && npm run generate-app-schema"
   },
   "dependencies": {

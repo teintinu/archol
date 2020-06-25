@@ -1,7 +1,7 @@
-import { Workspace, Application, Lang } from "./types";
+import { Workspace, Application, Lang } from "./typesDef";
 
 export async function buildApp(ws: Workspace, app: Application, onlyLang?: Lang) {
-  const builders = Object.keys(app.builders)
+  const buildxers = Object.keys(app.builders)
   const all = builders.map(async (builderName) => {
     const cfg = app.builders[builderName]
     const builder = ws.builders[builderName]

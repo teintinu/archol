@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "module": "None",
+    "moduleResolution": "Classic",
+    "noEmit": true
+  },
+  "include": [
+    "./*.ts"
+  ]
+}

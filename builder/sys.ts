@@ -3,6 +3,7 @@ import { dirname } from "path";
 import util from 'util';
 import mkdirp from 'mkdirp'
 
+export const readdir = util.promisify(fs.readdir);
 export const readFile = util.promisify(fs.readFile);
 export const writeFile = util.promisify(fs.writeFile);
 

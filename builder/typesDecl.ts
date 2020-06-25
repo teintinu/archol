@@ -4,8 +4,7 @@ export interface Application {
   description: I18N,
   icon: Icon,
   uses: string[]
-  lang: Lang
-  langs: Lang[]  
+  langs: Lang[]
   builders: {
     [builderName: string]: BuilderConfig
   }
@@ -21,14 +20,24 @@ export type Lang = 'pt' | 'en'
 
 export interface Package {
   name: string
+  redefines?: string
   uses: string[]
   types: Types,
   collections: Collections,
   documents: Documents,
   processes: Processes,
-  roles: string[]
+  roles: Roles
   views: Views,
   functions: Functions,
+}
+
+export type Roles = {
+  [typeName: string]: Role
+}
+
+export interface Role {
+  description: I18N,
+  icon: Icon
 }
 
 export type Types = {
@@ -82,13 +91,17 @@ export interface Process {
   title: I18N
   caption: I18N
   tasks: Tasks
-  vars: {
-    input: Fields,
-    output: Fields,
-    local: Fields,
-  },
+  vars: ProcessVars
   roles: string[]
   volatile: boolean
+}
+
+export type ProcessVars = {
+  [varName: string]: ProcessVar
+}
+
+export interface ProcessVar extends Field {
+  scope: 'input' | 'output' | 'volatile' | 'persistent'
 }
 
 export type Tasks = {
@@ -167,15 +180,16 @@ export interface UseFunction {
 
 export interface Workspace {
   rootDir: string
+  tempDir: string
   builders: {
     [name: string]: Builder
   },
-  getApp(name: string): Promise<Application>
-  getPkg(name: string): Promise<Package>
+  getApp (name: string): Promise<Application>
+  getPkg (name: string): Promise<Package>
 }
 
 export interface Builder {
-  buildApp(ws: Workspace, app: Application, cfg: BuilderConfig, onlyLang?: Lang): Promise<void>
+  buildApp (ws: Workspace, app: Application, cfg: BuilderConfig, onlyLang?: Lang): Promise<void>
 }
 
 export interface BuilderConfig {
