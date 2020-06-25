@@ -5,7 +5,9 @@ export interface Application {
   uses: string[]
   lang: string
   rules: string[]
-  builders: string[]
+  builders: {
+    [builderName: string]: BuilderConfig
+  }
 }
 
 export type I18N = string | {
@@ -74,6 +76,8 @@ export interface Process {
   start: string
   tasks: Tasks
   variables: Fields
+  rules: string[]
+  volatile: boolean
 }
 
 export type Tasks = {
@@ -86,14 +90,17 @@ export type NextTask = string | {
   condition: string
 }
 
-export interface UITask {
-  useView: string
+export interface BaseTask {
+  rules: string[]
   next: NextTask | NextTask[]
 }
 
-export interface SystemTask {
+export interface UITask extends BaseTask {
+  useView: string
+}
+
+export interface SystemTask extends BaseTask {
   useFunction: UseFunction
-  next: string
 }
 
 export type Views = {
@@ -146,7 +153,7 @@ export interface UseFunction {
 }
 
 export interface Workspace {
-  outDir: string
+  rootDir: string
   builders: {
     [name: string]: Builder
   },
@@ -154,5 +161,9 @@ export interface Workspace {
 }
 
 export interface Builder {
-  build(ws: Workspace, app: Application): Promise<void>
+  build(ws: Workspace, app: Application, cfg: BuilderConfig): Promise<void>
+}
+
+export interface BuilderConfig {
+  outDir: string
 }

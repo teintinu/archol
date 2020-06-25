@@ -1,23 +1,18 @@
 import { Workspace, Application } from "./types";
-import * as fs from "fs";
 import { resolve, join } from 'path'
-import util from 'util';
 import { buildApp } from './buildApp';
-import { expressMongo } from './express-mongo';
-import { pwaReact } from './pwa-react';
+import { quasarMongo } from './quasar-mongo';
+import { readFile } from './sys';
 
-const readFile = util.promisify(fs.readFile);
-const rootDir = resolve(__dirname + '../../../..')
-console.log(rootDir)
+const rootDir = resolve(__dirname + '../../../../ws')
 
 const ws: Workspace = {
-  outDir: rootDir+'/.temp/out',
+  rootDir: rootDir,
   builders: {
-    "express-mongo": expressMongo,
-    "pwa-react": pwaReact,
+    "quasar-mongo": quasarMongo
   },
   async getApp(name) {
-    const str = await readFile(rootDir + '/ws/' + name + '.app.json', {
+    const str = await readFile(rootDir + name + '.app.json', {
       encoding: 'utf8'
     })
     return JSON.parse(str)

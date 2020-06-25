@@ -2,6 +2,35 @@
   "$ref": "#/definitions/Package",
   "$schema": "http://json-schema.org/draft-06/schema#",
   "definitions": {
+    "BaseTask": {
+      "additionalProperties": false,
+      "properties": {
+        "next": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/NextTask"
+            },
+            {
+              "items": {
+                "$ref": "#/definitions/NextTask"
+              },
+              "type": "array"
+            }
+          ]
+        },
+        "rules": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "rules",
+        "next"
+      ],
+      "type": "object"
+    },
     "Collection": {
       "additionalProperties": false,
       "properties": {
@@ -205,6 +234,12 @@
     "Process": {
       "additionalProperties": false,
       "properties": {
+        "rules": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "start": {
           "type": "string"
         },
@@ -213,12 +248,17 @@
         },
         "variables": {
           "$ref": "#/definitions/Fields"
+        },
+        "volatile": {
+          "type": "boolean"
         }
       },
       "required": [
         "start",
         "tasks",
-        "variables"
+        "variables",
+        "rules",
+        "volatile"
       ],
       "type": "object"
     },
@@ -229,20 +269,23 @@
       "type": "object"
     },
     "SystemTask": {
-      "additionalProperties": false,
-      "properties": {
-        "next": {
-          "type": "string"
+      "allOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "useFunction": {
+              "$ref": "#/definitions/UseFunction"
+            }
+          },
+          "required": [
+            "useFunction"
+          ],
+          "type": "object"
         },
-        "useFunction": {
-          "$ref": "#/definitions/UseFunction"
+        {
+          "$ref": "#/definitions/BaseTask"
         }
-      },
-      "required": [
-        "useFunction",
-        "next"
-      ],
-      "type": "object"
+      ]
     },
     "Task": {
       "anyOf": [
@@ -285,30 +328,23 @@
       "type": "object"
     },
     "UITask": {
-      "additionalProperties": false,
-      "properties": {
-        "next": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/NextTask"
-            },
-            {
-              "items": {
-                "$ref": "#/definitions/NextTask"
-              },
-              "type": "array"
+      "allOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "useView": {
+              "type": "string"
             }
-          ]
+          },
+          "required": [
+            "useView"
+          ],
+          "type": "object"
         },
-        "useView": {
-          "type": "string"
+        {
+          "$ref": "#/definitions/BaseTask"
         }
-      },
-      "required": [
-        "useView",
-        "next"
-      ],
-      "type": "object"
+      ]
     },
     "UseFunction": {
       "additionalProperties": false,

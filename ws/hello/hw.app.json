@@ -9,8 +9,9 @@
   "rules": [
     "user"
   ],
-  "builders": [
-    "express-mongo",
-    "pwa-react"
-  ]
+  "builders": {
+    "quasar": {
+      "outDir": "../../temp/out/hw/server"
+    }
+  }
 }
