@@ -16,7 +16,9 @@ export const quasarMongo: Builder = {
     }
     saveAppIndex()
     function saveAppIndex () {
-      indexlines.push('export const allProcesses = [' + pkgnames.join(',') + ']')
+      indexlines.push('export const allProcesses = [' +
+        pkgnames.map((p) => '...' + p).join(',') + ']'
+      )
       writeLines(appDir + '/index.ts', indexlines)
     }
 
