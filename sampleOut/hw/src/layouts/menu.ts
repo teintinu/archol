@@ -6,8 +6,8 @@ export function useMenu () {
   const lang = useLang().lang
   return [
     {
-      title: askAndShowName.title[lang],
-      caption: askAndShowName.caption[lang],
+      title: askAndShowName.title[lang](),
+      caption: askAndShowName.caption[lang](),
       icon: askAndShowName.icon,
       run () {
         newInstance(askAndShowName)
