@@ -1,13 +1,13 @@
-import { Process } from '../../archollib'
+import { Process } from "../../archollib"
 export const askAndShowName: Process = {
-  pid: 'hw.askAndShowName',
+  pid: "hw.askAndShowName",
   title: {
-    pt: () => 'Olá mundo'
+    pt: () => "Olá mundo",
   },
   caption: {
-    pt: () => 'Pergunta nome e cumprimenta'
+    pt: () => "Pergunta nome e cumprimenta",
   },
-  icon: 'scholl'
+  icon: "scholl"
 }
 
-export const processes = [askAndShowName]
+export const processes = [askAndShowName];

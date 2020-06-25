@@ -5,7 +5,7 @@ export interface Application {
   icon: Icon,
   uses: string[]
   lang: Lang
-  langs: Lang[]
+  langs: Lang[]  
   builders: {
     [builderName: string]: BuilderConfig
   }

@@ -21,7 +21,6 @@ export const quasarMongo: Builder = {
     }
 
     function i18n<T extends object> (obj: T, prop: keyof T): Exclude<I18N, string> {
-      console.log('18n', prop, obj)
       if (typeof obj[prop] == 'string') {
         (obj as any)[prop] = { [app.lang]: obj[prop] }
       }

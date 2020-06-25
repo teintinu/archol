@@ -8,7 +8,7 @@
   "uses": ["./hw"],
   "lang": "pt",
   "langs": ["pt"],
-  "rules": [
+  "roles": [
     "user"
   ],
   "builders": {
