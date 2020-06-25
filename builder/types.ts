@@ -2,6 +2,7 @@
 export interface Application {
   name: string
   description: I18N,
+  icon: Icon,
   uses: string[]
   lang: string
   rules: string[]
@@ -9,6 +10,8 @@ export interface Application {
     [builderName: string]: BuilderConfig
   }
 }
+
+export type Icon = string
 
 export type I18N = string | {
   [lang in Lang]: string

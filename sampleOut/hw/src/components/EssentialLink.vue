@@ -3,7 +3,7 @@
     clickable
     tag="a"
     target="_blank"
-    :href="link"
+    @click="clicked"
   >
     <q-item-section
       v-if="icon"
@@ -35,14 +35,21 @@ export default {
       default: ''
     },
 
-    link: {
-      type: String,
-      default: '#'
+    run: {
+      type: Function
     },
 
     icon: {
       type: String,
       default: ''
+    }
+  },
+  methods: {
+    clicked () {
+      debugger
+      /* eslint-disable */
+      this.run()
+      a()
     }
   }
 }

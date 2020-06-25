@@ -4,6 +4,7 @@
     "pt": "Olá",
     "en": "Hellow"
   },
+  "icon": "school",
   "uses": ["./hw"],
   "lang": "pt",
   "rules": [
