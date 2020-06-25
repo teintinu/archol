@@ -9,7 +9,7 @@
   "lang": "pt",
   "langs": ["pt"],
   "roles": [
-    "user"
+    "userx"
   ],
   "builders": {
     "quasar-mongo": {

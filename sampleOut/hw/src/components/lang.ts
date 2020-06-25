@@ -1,9 +1,9 @@
 import {
-  reactive
+  reactive,
 } from '@vue/composition-api'
 
 const lang = reactive({
-  lang: 'pt'
+  lang: 'pt',
 })
 
 export function useLang () {

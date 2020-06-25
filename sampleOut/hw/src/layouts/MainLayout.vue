@@ -54,15 +54,15 @@ export default {
   name: 'MainLayout',
 
   components: {
-    EssentialLink
+    EssentialLink,
   },
 
   data () {
     const menu = useMenu()
     return {
       leftDrawerOpen: false,
-      essentialLinks: menu
+      essentialLinks: menu,
     }
-  }
+  },
 }
 </script>

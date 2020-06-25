@@ -27,22 +27,22 @@ export default {
   props: {
     title: {
       type: String,
-      required: true
+      required: true,
     },
 
     caption: {
       type: String,
-      default: ''
+      default: '',
     },
 
     run: {
-      type: Function
+      type: Function,
     },
 
     icon: {
       type: String,
-      default: ''
-    }
+      default: '',
+    },
   },
   methods: {
     clicked () {

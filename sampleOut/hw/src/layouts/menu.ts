@@ -11,7 +11,7 @@ export function useMenu () {
       icon: askAndShowName.icon,
       run () {
         newInstance(askAndShowName)
-      }
-    }
+      },
+    },
   ]
 }

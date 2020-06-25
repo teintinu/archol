@@ -7,6 +7,7 @@ export const readFile = util.promisify(fs.readFile);
 export const writeFile = util.promisify(fs.writeFile);
 
 export async function writeLines (filename: string, lines: string[]) {
+  if (lines[lines.length-1]!=='') lines.push('')
   const dir = dirname(filename)
   await mkdirp(dir)
   await writeFile(filename, lines.join('\n'), 'utf-8')
