@@ -55,6 +55,7 @@ export const quasarMongo: Builder = {
         saveI18N(lines, '  ', p, 'title', false)
         saveI18N(lines, '  ', p, 'caption', false)
         lines.push('  icon: \'' + p.icon + '\',')
+        lines.push('  volatile: ' + (p.volatile ? 'true' : 'false') + ',')
         lines.push('}')
       }
       lines.push('')

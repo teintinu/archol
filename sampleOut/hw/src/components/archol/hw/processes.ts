@@ -8,6 +8,7 @@ export const askAndShowName: Process = {
     pt: () => 'Pergunta nome e cumprimenta',
   },
   icon: 'scholl',
+  volatile: true,
 }
 
 export const processes = [askAndShowName]

@@ -264,8 +264,25 @@
         "title": {
           "$ref": "#/definitions/I18N"
         },
-        "variables": {
-          "$ref": "#/definitions/Fields"
+        "vars": {
+          "additionalProperties": false,
+          "properties": {
+            "input": {
+              "$ref": "#/definitions/Fields"
+            },
+            "local": {
+              "$ref": "#/definitions/Fields"
+            },
+            "output": {
+              "$ref": "#/definitions/Fields"
+            }
+          },
+          "required": [
+            "input",
+            "output",
+            "local"
+          ],
+          "type": "object"
         },
         "volatile": {
           "type": "boolean"
@@ -277,7 +294,7 @@
         "title",
         "caption",
         "tasks",
-        "variables",
+        "vars",
         "roles",
         "volatile"
       ],

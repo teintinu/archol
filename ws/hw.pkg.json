@@ -4,6 +4,9 @@
   "types": {},
   "documents": {},
   "uses": [],
+  "roles": [
+    "user"
+  ],
   "processes": {
     "askAndShowName": {
       "title": "Olá mundo",
@@ -11,27 +14,35 @@
       "icon": "scholl",
       "start": "askFirst",
       "volatile": true,
-      "rules": [],
-      "variables": {
-        "firstName": {
-          "type": "string"
-        },
-        "lastName": {
-          "type": "string"
-        },
-        "fullName": {
-          "type": "string"
+      "roles": [],
+      "vars": {
+        "input": {},
+        "output": {},
+        "local": {
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          }
         }
       },
       "tasks": {
-        "askFirst": {
+        "askFirst": {          
           "useView": "askFirstName",
           "next": "askLast",
-          "roles": ["user"]
+          "roles": [
+            "user"
+          ]
         },
         "askLast": {
           "useView": "askLastName",
-          "roles": ["user"],
+          "roles": [
+            "user"
+          ],
           "next": [
             {
               "task": "concatName",

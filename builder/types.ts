@@ -82,7 +82,11 @@ export interface Process {
   title: I18N
   caption: I18N
   tasks: Tasks
-  variables: Fields
+  vars: {
+    input: Fields,
+    output: Fields,
+    local: Fields,
+  },
   roles: string[]
   volatile: boolean
 }
