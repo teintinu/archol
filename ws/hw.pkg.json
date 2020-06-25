@@ -6,7 +6,12 @@
   "uses": [],
   "processes": {
     "askAndShowName": {
+      "title": "Olá mundo",
+      "caption": "Pergunta nome e cumprimenta",
+      "icon": "scholl",
       "start": "askFirst",
+      "volatile": true,
+      "rules": [],
       "variables": {
         "firstName": {
           "type": "string"
@@ -21,10 +26,12 @@
       "tasks": {
         "askFirst": {
           "useView": "askFirstName",
-          "next": "askLast"
+          "next": "askLast",
+          "roles": ["user"]
         },
         "askLast": {
           "useView": "askLastName",
+          "roles": ["user"],
           "next": [
             {
               "task": "concatName",

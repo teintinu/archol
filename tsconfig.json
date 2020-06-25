@@ -8,7 +8,7 @@
     ],
     "sourceMap": true,
     "outDir": ".temp/dist",
-    "tsBuildInfoFile": ".temp/cache",
+//    "tsBuildInfoFile": ".temp/cache",
     "rootDir": "./",
     "importHelpers": true,
     "downlevelIteration": true,
@@ -16,5 +16,12 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
-  }
+  },
+  "include": [
+    "ide/**/*.ts",
+    "builder/**/*.ts",
+  ],
+  "exclude": [
+    "sampleOut/**/*.*"
+  ]
 }

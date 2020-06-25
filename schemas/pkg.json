@@ -5,6 +5,9 @@
     "BaseTask": {
       "additionalProperties": false,
       "properties": {
+        "lane": {
+          "type": "string"
+        },
         "next": {
           "anyOf": [
             {
@@ -18,7 +21,10 @@
             }
           ]
         },
-        "rules": {
+        "pool": {
+          "type": "string"
+        },
+        "roles": {
           "items": {
             "type": "string"
           },
@@ -26,7 +32,7 @@
         }
       },
       "required": [
-        "rules",
+        "roles",
         "next"
       ],
       "type": "object"
@@ -139,10 +145,6 @@
               "type": "string"
             }
           },
-          "required": [
-            "pt",
-            "en"
-          ],
           "type": "object"
         }
       ]
@@ -206,6 +208,12 @@
         "processes": {
           "$ref": "#/definitions/Processes"
         },
+        "roles": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "types": {
           "$ref": "#/definitions/Types"
         },
@@ -226,6 +234,7 @@
         "collections",
         "documents",
         "processes",
+        "roles",
         "views",
         "functions"
       ],
@@ -234,7 +243,13 @@
     "Process": {
       "additionalProperties": false,
       "properties": {
-        "rules": {
+        "caption": {
+          "$ref": "#/definitions/I18N"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "roles": {
           "items": {
             "type": "string"
           },
@@ -246,6 +261,9 @@
         "tasks": {
           "$ref": "#/definitions/Tasks"
         },
+        "title": {
+          "$ref": "#/definitions/I18N"
+        },
         "variables": {
           "$ref": "#/definitions/Fields"
         },
@@ -255,9 +273,12 @@
       },
       "required": [
         "start",
+        "icon",
+        "title",
+        "caption",
         "tasks",
         "variables",
-        "rules",
+        "roles",
         "volatile"
       ],
       "type": "object"

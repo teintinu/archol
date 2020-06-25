@@ -1,49 +1,64 @@
-import { Builder } from "../types";
+import { Builder, Package, I18N, Lang } from "../types";
 import { join, resolve } from 'path'
 import { Project } from "ts-morph";
-import { writeFile } from '../sys';
+import { writeFile, writeLines } from '../sys';
 
 export const quasarMongo: Builder = {
-  async build(ws, app, cfg) {
-    const outDir = join(ws.rootDir, cfg.rootDir, app.name, 'server')
-    indexTs()
-    indexHtml()
-    function indexTs() {
-      const project = new Project({ compilerOptions: { outDir } });
-      const index = project.createSourceFile('index.ts')
-      index.addStatements(`
-const express = require('express')
-const path = require('path')
-
-const httpPort = process.ENV.PORT || 3000
-
-const app = express()
-
-app.use(express.static(path.join(__dirname, 'public')))
-
-app.get('/', function(req, res) {
-  res.sendFile(path.join(__dirname, 'public/index.html'))
-})
-
-app.listen(httpPort, function () {
-  console.log('Listening on port ', httpPort)
-})    
-`)
-      project.emit();
+  async buildApp (ws, app, cfg, onlyLang) {
+    const appDir = join(ws.rootDir, cfg.rootDir, '/src/components/archol')
+    const indexlines: string[] = []
+    const pkgnames: string[] = []
+    for (const pkgname of app.uses) {
+      const pkg = await ws.getPkg(pkgname)
+      pkgnames.push(pkg.name)
+      indexlines.push('import { processes as ' + pkg.name + '} from "./' + pkg.name + '/processes"')
+      saveProcesses(pkg)
     }
-    function indexHtml() {
-      writeFile(outDir + '?',
-        `
-<html>
-  <body>
-    <span>This example is for the article of progressive web apps written for LogRocket</span>
-    <br>
-    <span>You are now</span> <span><b class="page-status">online</b></span>
-    <script src="/js/pwa.js"></script>
-  </body>
-</html>
-`, { encoding: 'utf-8' }
-      )
+    saveAppIndex()
+    function saveAppIndex () {
+      indexlines.push('export const allProcesses = [' + pkgnames.join(',') + ']')
+      writeLines(appDir + '/index.ts', indexlines)
+    }
+
+    function i18n<T extends object> (obj: T, prop: keyof T): Exclude<I18N, string> {
+      console.log('18n', prop, obj)
+      if (typeof obj[prop] == 'string') {
+        (obj as any)[prop] = { [app.lang]: obj[prop] }
+      }
+      return obj[prop] as any
+    }
+
+    function saveI18N<T extends object> (lines: string[], ident: string, obj: T, prop: keyof T, allowParams: boolean) {
+      if (allowParams) throw new Error('todo')
+      const val = i18n(obj, prop)
+      lines.push(ident + prop + ': {')
+      if (onlyLang) save(onlyLang)
+      else for (const lang of app.langs) save(lang)
+      lines.push(ident + '},')
+      function save (lang: Lang) {
+        const lval = val[lang]
+        if (!lval) throw new Error('no translation')
+        lines.push(ident + '  ' + lang + ': () => "' + lval + '",')
+      }
+    }
+
+    function saveProcesses (pkg: Package) {
+      const lines: string[] = ['import { Process } from "../../archollib"']
+      const processes = Object.keys(pkg.processes)
+      for (const processName of processes) {
+        const p = pkg.processes[processName]
+        lines.push(
+          'export const ' + processName + ': Process = {',
+          '  pid: "' + pkg.name + '.' + processName + '",',
+        )
+        saveI18N(lines, '  ', p, 'title', false)
+        saveI18N(lines, '  ', p, 'caption', false)
+        lines.push('  icon: "' + p.icon + '"')
+        lines.push('}')
+      }
+      lines.push('')
+      lines.push('export const processes = [' + processes.join(',') + '];')
+      writeLines(appDir + '/' + pkg.name + '/processes.ts', lines)
     }
   }
 }

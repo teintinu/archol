@@ -18,16 +18,16 @@
           "$ref": "#/definitions/Icon"
         },
         "lang": {
-          "type": "string"
+          "$ref": "#/definitions/Lang"
+        },
+        "langs": {
+          "items": {
+            "$ref": "#/definitions/Lang"
+          },
+          "type": "array"
         },
         "name": {
           "type": "string"
-        },
-        "rules": {
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
         },
         "uses": {
           "items": {
@@ -42,7 +42,7 @@
         "icon",
         "uses",
         "lang",
-        "rules",
+        "langs",
         "builders"
       ],
       "type": "object"
@@ -74,15 +74,18 @@
               "type": "string"
             }
           },
-          "required": [
-            "pt",
-            "en"
-          ],
           "type": "object"
         }
       ]
     },
     "Icon": {
+      "type": "string"
+    },
+    "Lang": {
+      "enum": [
+        "pt",
+        "en"
+      ],
       "type": "string"
     }
   }

@@ -16,12 +16,18 @@ const ws: Workspace = {
       encoding: 'utf8'
     })
     return JSON.parse(str)
-  }
+  },
+  async getPkg(name) {
+    const str = await readFile(rootDir + '/' +name + '.pkg.json', {
+      encoding: 'utf8'
+    })
+    return JSON.parse(str)
+  },
 }
 
 async function build_ws() {
-  const hw = await ws.getApp('hello/hw')
-  await buildApp(ws, hw)
+  const hw = await ws.getApp('/hw')
+  await buildApp(ws, hw, 'pt')
 }
 
 build_ws().then( () => console.log('ok') )

@@ -4,8 +4,8 @@ export interface Application {
   description: I18N,
   icon: Icon,
   uses: string[]
-  lang: string
-  rules: string[]
+  lang: Lang
+  langs: Lang[]
   builders: {
     [builderName: string]: BuilderConfig
   }
@@ -14,7 +14,7 @@ export interface Application {
 export type Icon = string
 
 export type I18N = string | {
-  [lang in Lang]: string
+  [lang in Lang]?: string
 }
 
 export type Lang = 'pt' | 'en'
@@ -26,6 +26,7 @@ export interface Package {
   collections: Collections,
   documents: Documents,
   processes: Processes,
+  roles: string[]
   views: Views,
   functions: Functions,
 }
@@ -77,9 +78,12 @@ export type Processes = {
 
 export interface Process {
   start: string
+  icon: string
+  title: I18N
+  caption: I18N
   tasks: Tasks
   variables: Fields
-  rules: string[]
+  roles: string[]
   volatile: boolean
 }
 
@@ -94,7 +98,9 @@ export type NextTask = string | {
 }
 
 export interface BaseTask {
-  rules: string[]
+  pool?: string,
+  lane?: string,
+  roles: string[]
   next: NextTask | NextTask[]
 }
 
@@ -161,10 +167,11 @@ export interface Workspace {
     [name: string]: Builder
   },
   getApp(name: string): Promise<Application>
+  getPkg(name: string): Promise<Package>
 }
 
 export interface Builder {
-  build(ws: Workspace, app: Application, cfg: BuilderConfig): Promise<void>
+  buildApp(ws: Workspace, app: Application, cfg: BuilderConfig, onlyLang?: Lang): Promise<void>
 }
 
 export interface BuilderConfig {

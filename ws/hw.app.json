@@ -2,17 +2,18 @@
   "name": "hw",
   "description": {
     "pt": "Olá",
-    "en": "Hellow"
+    "en": "Hello"
   },
   "icon": "school",
   "uses": ["./hw"],
   "lang": "pt",
+  "langs": ["pt"],
   "rules": [
     "user"
   ],
   "builders": {
-    "quasar": {
-      "rootDir": "../../sampleOut/hw"
+    "quasar-mongo": {
+      "rootDir": "../sampleOut/hw"
     }
   }
 }

@@ -16,5 +16,19 @@
   "editor.minimap.enabled": false,
   "editor.fontFamily": "source code pro",
   "editor.fontWeight": "300",
-  "editor.tabSize": 2
+  "editor.tabSize": 2,
+  "json.schemas": [
+    {
+      "fileMatch": [
+        "*.app.json"
+      ],
+      "url": "./schemas/app.json"
+    },
+    {
+      "fileMatch": [
+        "*.pkg.json"
+      ],
+      "url": "./schemas/pkg.json"
+    },
+  ]
 }
