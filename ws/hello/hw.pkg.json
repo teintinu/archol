@@ -1,0 +1,138 @@
+{
+  "name": "hw",
+  "collections": {},
+  "types": {},
+  "documents": {},
+  "uses": [],
+  "processes": {
+    "askAndShowName": {
+      "start": "askFirst",
+      "variables": {
+        "firstName": {
+          "type": "string"
+        },
+        "lastName": {
+          "type": "string"
+        },
+        "fullName": {
+          "type": "string"
+        }
+      },
+      "tasks": {
+        "askFirst": {
+          "useView": "askFirstName",
+          "next": "askLast"
+        },
+        "askLast": {
+          "useView": "askLastName",
+          "next": [
+            {
+              "task": "concatName",
+              "condition": "lastName.length>0"
+            },
+            {
+              "task": "useFirst",
+              "condition": "lastName.length===0"
+            }
+          ]
+        },
+        "concatName": {
+          "useFunction": {
+            "function": "concatname",
+            "input": {
+              "first": "firstName",
+              "last": "lastName"
+            },
+            "output": {
+              "full": "fullName"
+            }
+          },
+          "next": "showFull"
+        },
+        "useFirst": {
+          "useFunction": {
+            "function": "usefirst",
+            "input": {
+              "first": "firstName"
+            },
+            "output": {
+              "full": "fullName"
+            }
+          },
+          "next": "showFull"
+        },
+        "showFull": {
+          "useView": "showFullName",
+          "next": []
+        }
+      }
+    }
+  },
+  "functions": {
+    "concatname": {
+      "level": "cpu",
+      "input": {
+        "first": {
+          "type": "string"
+        },
+        "last": {
+          "type": "string"
+        }
+      },
+      "output": {
+        "full": {
+          "type": "string"
+        }
+      },
+      "code": "output.full = input.first + ' ' + input.last"
+    },
+    "usefirst": {
+      "level": "cpu",
+      "input": {
+        "first": {
+          "type": "string"
+        }
+      },
+      "output": {
+        "full": {
+          "type": "string"
+        }
+      },
+      "code": "output.full = input.first"
+    }
+  },
+  "views": {
+    "askFirstName": {
+      "content": [
+        {
+          "kind": "entry",
+          "var": "firstName"
+        }
+      ],
+      "primaryAction": {
+        "caption": "Continuar",
+        "useFunction": "next"
+      }
+    },
+    "askLastName": {
+      "content": [
+        {
+          "kind": "entry",
+          "var": "lastName"
+        }
+      ],
+      "primaryAction": {
+        "caption": "Continuar",
+        "useFunction": "next"
+      }
+    },
+    "showFullName": {
+      "content": [
+        {
+          "kind": "show",
+          "var": "fullName"
+        }
+      ]
+    }
+  }
+}

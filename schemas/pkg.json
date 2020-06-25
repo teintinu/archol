@@ -1,0 +1,453 @@
+{
+  "$ref": "#/definitions/Package",
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "definitions": {
+    "Collection": {
+      "additionalProperties": false,
+      "properties": {
+        "fields": {
+          "$ref": "#/definitions/Fields"
+        },
+        "indexes": {
+          "$ref": "#/definitions/Indexes"
+        }
+      },
+      "required": [
+        "fields",
+        "indexes"
+      ],
+      "type": "object"
+    },
+    "Collections": {
+      "additionalProperties": {
+        "$ref": "#/definitions/Collection"
+      },
+      "type": "object"
+    },
+    "Document": {
+      "additionalProperties": false,
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/Fields"
+        }
+      },
+      "required": [
+        "data"
+      ],
+      "type": "object"
+    },
+    "Documents": {
+      "additionalProperties": {
+        "$ref": "#/definitions/Document"
+      },
+      "type": "object"
+    },
+    "Field": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "Fields": {
+      "additionalProperties": {
+        "$ref": "#/definitions/Field"
+      },
+      "type": "object"
+    },
+    "Function": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "input": {
+          "$ref": "#/definitions/Fields"
+        },
+        "level": {
+          "enum": [
+            "cpu",
+            "local",
+            "net"
+          ],
+          "type": "string"
+        },
+        "output": {
+          "$ref": "#/definitions/Fields"
+        }
+      },
+      "required": [
+        "level",
+        "input",
+        "output",
+        "code"
+      ],
+      "type": "object"
+    },
+    "Functions": {
+      "additionalProperties": {
+        "$ref": "#/definitions/Function"
+      },
+      "type": "object"
+    },
+    "I18N": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "en": {
+              "type": "string"
+            },
+            "pt": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "pt",
+            "en"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "Index": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "Indexes": {
+      "additionalProperties": {
+        "$ref": "#/definitions/Index"
+      },
+      "type": "object"
+    },
+    "NextTask": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "condition": {
+              "type": "string"
+            },
+            "task": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "task",
+            "condition"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "Package": {
+      "additionalProperties": false,
+      "properties": {
+        "collections": {
+          "$ref": "#/definitions/Collections"
+        },
+        "documents": {
+          "$ref": "#/definitions/Documents"
+        },
+        "functions": {
+          "$ref": "#/definitions/Functions"
+        },
+        "name": {
+          "type": "string"
+        },
+        "processes": {
+          "$ref": "#/definitions/Processes"
+        },
+        "types": {
+          "$ref": "#/definitions/Types"
+        },
+        "uses": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "views": {
+          "$ref": "#/definitions/Views"
+        }
+      },
+      "required": [
+        "name",
+        "uses",
+        "types",
+        "collections",
+        "documents",
+        "processes",
+        "views",
+        "functions"
+      ],
+      "type": "object"
+    },
+    "Process": {
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "type": "string"
+        },
+        "tasks": {
+          "$ref": "#/definitions/Tasks"
+        },
+        "variables": {
+          "$ref": "#/definitions/Fields"
+        }
+      },
+      "required": [
+        "start",
+        "tasks",
+        "variables"
+      ],
+      "type": "object"
+    },
+    "Processes": {
+      "additionalProperties": {
+        "$ref": "#/definitions/Process"
+      },
+      "type": "object"
+    },
+    "SystemTask": {
+      "additionalProperties": false,
+      "properties": {
+        "next": {
+          "type": "string"
+        },
+        "useFunction": {
+          "$ref": "#/definitions/UseFunction"
+        }
+      },
+      "required": [
+        "useFunction",
+        "next"
+      ],
+      "type": "object"
+    },
+    "Task": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/UITask"
+        },
+        {
+          "$ref": "#/definitions/SystemTask"
+        }
+      ]
+    },
+    "Tasks": {
+      "additionalProperties": {
+        "$ref": "#/definitions/Task"
+      },
+      "type": "object"
+    },
+    "Type": {
+      "additionalProperties": false,
+      "properties": {
+        "base": {
+          "enum": [
+            "string",
+            "number",
+            "boolean",
+            "date"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "base"
+      ],
+      "type": "object"
+    },
+    "Types": {
+      "additionalProperties": {
+        "$ref": "#/definitions/Type"
+      },
+      "type": "object"
+    },
+    "UITask": {
+      "additionalProperties": false,
+      "properties": {
+        "next": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/NextTask"
+            },
+            {
+              "items": {
+                "$ref": "#/definitions/NextTask"
+              },
+              "type": "array"
+            }
+          ]
+        },
+        "useView": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "useView",
+        "next"
+      ],
+      "type": "object"
+    },
+    "UseFunction": {
+      "additionalProperties": false,
+      "properties": {
+        "function": {
+          "type": "string"
+        },
+        "input": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "output": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "function",
+        "input",
+        "output"
+      ],
+      "type": "object"
+    },
+    "View": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "items": {
+            "$ref": "#/definitions/Widget"
+          },
+          "type": "array"
+        },
+        "othersActions": {
+          "items": {
+            "$ref": "#/definitions/ViewAction"
+          },
+          "type": "array"
+        },
+        "primaryAction": {
+          "$ref": "#/definitions/ViewAction"
+        },
+        "secondaryAction": {
+          "$ref": "#/definitions/ViewAction"
+        }
+      },
+      "required": [
+        "content"
+      ],
+      "type": "object"
+    },
+    "ViewAction": {
+      "additionalProperties": false,
+      "properties": {
+        "caption": {
+          "$ref": "#/definitions/I18N"
+        },
+        "useFunction": {
+          "anyOf": [
+            {
+              "enum": [
+                "next"
+              ],
+              "type": "string"
+            },
+            {
+              "enum": [
+                "back"
+              ],
+              "type": "string"
+            },
+            {
+              "$ref": "#/definitions/UseFunction"
+            }
+          ]
+        }
+      },
+      "required": [
+        "caption",
+        "useFunction"
+      ],
+      "type": "object"
+    },
+    "Views": {
+      "additionalProperties": {
+        "$ref": "#/definitions/View"
+      },
+      "type": "object"
+    },
+    "Widget": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/WidgetEntry"
+        },
+        {
+          "$ref": "#/definitions/WidgetShow"
+        }
+      ]
+    },
+    "WidgetEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "entry"
+          ],
+          "type": "string"
+        },
+        "var": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "var"
+      ],
+      "type": "object"
+    },
+    "WidgetShow": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "show"
+          ],
+          "type": "string"
+        },
+        "var": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "var"
+      ],
+      "type": "object"
+    }
+  }
+}

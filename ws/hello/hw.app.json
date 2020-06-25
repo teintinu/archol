@@ -1,0 +1,16 @@
+{
+  "name": "hw",
+  "description": {
+    "pt": "Olá",
+    "en": "Hellow"
+  },
+  "uses": ["./hw"],
+  "lang": "pt",
+  "rules": [
+    "user"
+  ],
+  "builders": [
+    "express-mongo",
+    "pwa-react"
+  ]
+}

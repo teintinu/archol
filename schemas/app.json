@@ -1,0 +1,70 @@
+{
+  "$ref": "#/definitions/Application",
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "definitions": {
+    "Application": {
+      "additionalProperties": false,
+      "properties": {
+        "builders": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "description": {
+          "$ref": "#/definitions/I18N"
+        },
+        "lang": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "rules": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "uses": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "uses",
+        "lang",
+        "rules",
+        "builders"
+      ],
+      "type": "object"
+    },
+    "I18N": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "en": {
+              "type": "string"
+            },
+            "pt": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "pt",
+            "en"
+          ],
+          "type": "object"
+        }
+      ]
+    }
+  }
+}

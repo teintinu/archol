@@ -5,7 +5,18 @@
   "repository": "https://github.com/thr0w/archol.git",
   "author": "thr0w <josefernandotolentino@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "generate-app-schema": "npx typescript-to-json-schema --path builder/types.ts --type Application > schemas/app.json",
+    "generate-pkg-schema": "npx typescript-to-json-schema --path builder/types.ts --type Package > schemas/pkg.json",
+    "generate-schemas": "npm run generate-pkg-schema && npm run generate-app-schema"
+  },
   "dependencies": {
+    "chokidar": "^3.4.0",
+    "tslib": "^2.0.0",
     "typescript": "^3.9.5"
+  },
+  "devDependencies": {
+    "@types/node": "^14.0.14",
+    "typescript-to-json-schema": "^0.6.0"
   }
 }
