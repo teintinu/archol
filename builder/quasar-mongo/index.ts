@@ -1,15 +1,14 @@
-import { Builder, Package, I18N, Lang } from "../typesDef";
+import { BuilderImpl, Package, I18N, Lang } from "../typesDef";
 import { join, resolve } from 'path'
 import { Project } from "ts-morph";
 import { writeFile, writeLines } from '../sys';
 
-export const quasarMongo: Builder = {
-  async buildApp (ws, app, cfg, onlyLang) {
-    const appDir = join(ws.rootDir, cfg.rootDir, '/src/components/archol')
+export const quasarMongo: BuilderImpl = {
+  async buildApp (ws, app, info) {
+    const appDir = join(ws.rootDir, info.config.rootDir, '/src/components/archol')
     const indexlines: string[] = []
-    const pkgnamesx: string[] = []
-    for (const pkgname of app.uses) {
-      const pkg = await ws.getPkg(pkgname)
+    const pkgnames: string[] = []
+    for (const pkg of app.uses) {
       pkgnames.push(pkg.name)
       indexlines.push('import { processes as ' + pkg.name + ' } from \'./' + pkg.name + '/processes\'')
       saveProcesses(pkg)

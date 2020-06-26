@@ -8,7 +8,9 @@ declarePackage('hw')
   })
   .processes({
     askAndShowName: {
-      title: "Olá mundo",
+      title: {
+        pt: "Olá mundo"
+      },
       caption: "Pergunta nome e cumprimenta",
       icon: "scholl",
       start: "askFirst",

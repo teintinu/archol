@@ -44,8 +44,15 @@ export type Types = {
   [typeName: string]: Type
 }
 
+export const basicTypes = {
+  string: true,
+  number: true,
+  boolean: true,
+  date: true
+}
+
 export interface Type {
-  base: "string" | "number" | "boolean" | "date"
+  base: keyof typeof basicTypes
 }
 
 export type Fields = {
@@ -91,17 +98,17 @@ export interface Process {
   title: I18N
   caption: I18N
   tasks: Tasks
-  vars: ProcessVars
+  vars: {
+    input: ProcessVars,
+    ouput: ProcessVars,
+    local: ProcessVars,
+  }
   roles: string[]
   volatile: boolean
 }
 
 export type ProcessVars = {
-  [varName: string]: ProcessVar
-}
-
-export interface ProcessVar extends Field {
-  scope: 'input' | 'output' | 'volatile' | 'persistent'
+  [varName: string]: Field
 }
 
 export type Tasks = {
@@ -145,16 +152,11 @@ export interface ViewAction {
   useFunction: "next" | "back" | UseFunction
 }
 
-export type Widget = WidgetEntry | WidgetShow
-
-export interface WidgetEntry {
-  kind: "entry",
-  var: string
-}
-
-export interface WidgetShow {
-  kind: "show",
-  var: string
+export interface Widget {
+  kind: "entry" | "show",
+  children?: Widget[]
+  field?: string,
+  type?: string
 }
 
 export type Functions = {
@@ -176,20 +178,6 @@ export interface UseFunction {
   output: {
     [param: string]: string
   },
-}
-
-export interface Workspace {
-  rootDir: string
-  tempDir: string
-  builders: {
-    [name: string]: Builder
-  },
-  getApp (name: string): Promise<Application>
-  getPkg (name: string): Promise<Package>
-}
-
-export interface Builder {
-  buildApp (ws: Workspace, app: Application, cfg: BuilderConfig, onlyLang?: Lang): Promise<void>
 }
 
 export interface BuilderConfig {

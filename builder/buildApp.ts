@@ -1,16 +1,13 @@
-import { Workspace, Application, Lang } from "./typesDef";
+import { DefWorkspace, Application, Lang } from "./typesDef";
 
-export async function buildApp(ws: Workspace, app: Application, onlyLang?: Lang) {
-  const buildxers = Object.keys(app.builders)
-  const all = builders.map(async (builderName) => {
-    const cfg = app.builders[builderName]
-    const builder = ws.builders[builderName]
+export async function buildApp (ws: DefWorkspace, app: Application, onlyLang?: Lang) {
+  const all = app.builders.map(async (builderInfo) => {
+    const builder = ws.builders[builderInfo.builderName]
     if (builder) {
-      console.log(new Date().toISOString(),' ', builderName + ': building ' + builderName)
-      await builder.buildApp(ws, app, cfg, onlyLang)
-      console.log(new Date().toISOString(),' ',builderName + ': built ' + builderName)
-    }
-    else console.log(new Date().toISOString(),' ',builderName + ': invalid builder: ' + builderName)
+      console.log(new Date().toISOString(), ' ', builderInfo.builderName + ': building ' + builderInfo.builderName)
+      await builder.buildApp(ws, app, builderInfo)
+      console.log(new Date().toISOString(), ' ', builderInfo.builderName + ': built ' + builderInfo.builderName)
+    } else console.log(new Date().toISOString(), ' ', builderInfo.builderName + ': invalid builder: ' + builderInfo.builderName)
   })
   await Promise.all(all)
 }

@@ -2,7 +2,8 @@
   "compilerOptions": {
     "module": "None",
     "moduleResolution": "Classic",
-    "noEmit": true
+    "outFile": "../.temp/ws.js",
+    "noEmit": false
   },
   "include": [
     "./*.ts"

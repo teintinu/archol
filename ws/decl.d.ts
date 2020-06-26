@@ -50,8 +50,8 @@ declare type IhwProcesses = {
 }
 
 declare interface IhwProcessaskAndShowName {
-  title: string,
-  caption: string,
+  title: I18N,
+  caption: I18N,
   icon: Icon,
   start: IhwTaskNameaskAndShowName,
   volatile: true,

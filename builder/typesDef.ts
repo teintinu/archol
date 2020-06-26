@@ -160,34 +160,38 @@ export interface UseFunction {
   output: FunctionField[],
 }
 
+export interface DefWorkspace extends Workspace {
+  apps: { [appName: string]: decl.Application },
+  pkgs: { [pkgName: string]: decl.Package },
+}
+
 export interface Workspace {
   rootDir: string
+  tempDir: string
   builders: {
-    [name: string]: Builder
-  },
-  getApp (name: string): Promise<decl.Application>
-  getPkg (name: string): Promise<decl.Package>
+    [name: string]: BuilderImpl
+  }
 }
 
 export interface BuilderInfo {
   ws: Workspace,
   config: BuilderConfig
   onlyLang?: Lang
-  builderName: string,
-  builder: Builder,
+  builderName: string,  
 }
 
-export interface Builder {
-  buildApp (app: Application, info: BuilderInfo): Promise<void>
+export interface BuilderImpl {
+  buildApp (ws: DefWorkspace, app: Application, info: BuilderInfo): Promise<void>
 }
 
 export interface BuilderConfig {
   rootDir: string
 }
 
-export async function defApp (ws: Workspace, appname: string, onlyLang?: Lang) {
+export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang) {
 
-  const declApp: decl.Application = await ws.getApp(appname)
+  const declApp: decl.Application = await ws.apps[appname]
+  if (!declApp) throw new Error('invalid app name ' + appname)
 
   const defLang = declApp.langs[0]
   const appLangs = declApp.langs
@@ -242,7 +246,6 @@ export async function defApp (ws: Workspace, appname: string, onlyLang?: Lang) {
         builderName,
         ws,
         onlyLang,
-        builder: ws.builders[builderName],
         config: declApp.builders[builderName],
       }
       ret.push(b)
@@ -271,7 +274,8 @@ export async function defApp (ws: Workspace, appname: string, onlyLang?: Lang) {
   }
 
   async function vpackage (pkgname: string): Promise<Package> {
-    const declPkg: decl.Package = await ws.getPkg(pkgname)
+    const declPkg: decl.Package = await ws.pkgs[pkgname]
+    if (!declPkg) throw new Error('invalid package ' + pkgname)
     const pkgRoles = vpkgroles()
 
     const pkgViews = await vviews(declPkg.views)
@@ -402,7 +406,7 @@ export async function defApp (ws: Workspace, appname: string, onlyLang?: Lang) {
         return ret
       }
       async function vvars () {
-        const pvars=declProc.vars
+        const pvars = declProc.vars
         const ret: ProcessVar[] = []
         return ret
         // {
