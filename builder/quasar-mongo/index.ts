@@ -1,4 +1,4 @@
-import { BuilderImpl, Package, I18N, Lang } from "../typesDef";
+import { BuilderImpl, Package, I18N, Lang, Process } from "../typesDef";
 import { join, resolve } from 'path'
 import { Project } from "ts-morph";
 import { writeFile, writeLines } from '../sys';
@@ -23,26 +23,22 @@ export const quasarMongo: BuilderImpl = {
 
     function saveI18N<T extends object> (lines: string[], ident: string, obj: T, prop: keyof T, allowParams: boolean) {
       if (allowParams) throw new Error('todo')
-      const val = i18n(obj, prop)
+      const val: any = obj[prop]
       lines.push(ident + prop + ': {')
-      if (onlyLang) save(onlyLang)
-      else for (const lang of app.langs) save(lang)
+      for (const lang of app.langs) save(lang)
       lines.push(ident + '},')
       function save (lang: Lang) {
         const lval = val[lang]
-        if (!lval) throw new Error('no translation')
         lines.push(ident + '  ' + lang + ': () => \'' + lval + '\',')
       }
     }
 
     function saveProcesses (pkg: Package) {
       const lines: string[] = ['import { Process } from \'../../archollib\'']
-      const processes = Object.keys(pkg.processes)
-      for (const processName of processes) {
-        const p = pkg.processes[processName]
+      for (const p of pkg.processes) {
         lines.push(
-          'export const ' + processName + ': Process = {',
-          '  pid: \'' + pkg.name + '.' + processName + '\',',
+          'export const ' + p.name + ': Process = {',
+          '  pid: \'' + pkg.name + '.' + p.name + '\',',
         )
         saveI18N(lines, '  ', p, 'title', false)
         saveI18N(lines, '  ', p, 'caption', false)
@@ -51,7 +47,7 @@ export const quasarMongo: BuilderImpl = {
         lines.push('}')
       }
       lines.push('')
-      lines.push('export const processes = [' + processes.join(',') + ']')
+      lines.push('export const processes = [' + pkg.processes.map((p) => p.name).join(',') + ']')
       writeLines(appDir + '/' + pkg.name + '/processes.ts', lines)
     }
   }

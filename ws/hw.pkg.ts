@@ -33,16 +33,26 @@ declarePackage('hw')
       },
       tasks: {
         askFirst: {
-          useView: 'askFirstName',
+          useView: {
+            view: 'askFirstName',
+            bind: {
+              firstName: 'local.firstName'
+            }
+          },
           next: "askLast",
           roles: [
-            "user"
+            "public"
           ]
         },
         askLast: {
-          useView: "askLastName",
+          useView: {
+            view: 'askLastName',
+            bind: {
+              lastName: 'local.lastName'
+            }
+          },
           roles: [
-            "user"
+            "public"
           ],
           next: {
             concatName ({ local }) {
@@ -79,8 +89,13 @@ declarePackage('hw')
           next: "showFull"
         },
         showFull: {
-          useView: "showFullName",
-          roles: ["user"],
+          useView: {
+            view: 'showFullName',
+            bind: {
+              fullName: 'local.fullName'
+            }
+          },
+          roles: ["public"],
           next: {}
         }
       }

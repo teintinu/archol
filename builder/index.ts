@@ -9,7 +9,7 @@ const rootDir = resolve(__dirname + '../../../../ws')
 
 const ws: Workspace = {
   rootDir: rootDir,
-  tempDir: resolve(rootDir, '../temp'),
+  tempDir: resolve(rootDir, '../.temp'),
   builders: {
     "quasar-mongo": quasarMongo
   }

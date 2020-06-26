@@ -100,7 +100,7 @@ export interface Process {
   tasks: Tasks
   vars: {
     input: ProcessVars,
-    ouput: ProcessVars,
+    output: ProcessVars,
     local: ProcessVars,
   }
   roles: string[]
@@ -129,11 +129,26 @@ export interface BaseTask {
 }
 
 export interface UITask extends BaseTask {
-  useView: string
+  useView: UseView
+}
+
+export interface BindFields {
+  [field: string]: string
+}
+
+export interface UseView {
+  view: string
+  bind: BindFields,
 }
 
 export interface SystemTask extends BaseTask {
   useFunction: UseFunction
+}
+
+export interface UseFunction {
+  function: string
+  input: BindFields,
+  output: BindFields,
 }
 
 export type Views = {
@@ -168,16 +183,6 @@ export interface Function {
   input: Fields
   output: Fields
   code: string
-}
-
-export interface UseFunction {
-  function: string
-  input: {
-    [param: string]: string
-  },
-  output: {
-    [param: string]: string
-  },
 }
 
 export interface BuilderConfig {

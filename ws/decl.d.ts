@@ -60,7 +60,7 @@ declare interface IhwProcessaskAndShowName {
   tasks: IhwTasksaskAndShowName,
 }
 
-declare type IhwRole = 'user'
+declare type IhwRole = 'public'
 declare type IhwUseRoles = IhwRole[]
 
 declare interface IhwVarsaskAndShowName {
@@ -88,7 +88,7 @@ declare type IhwTasksaskAndShowName = {
 }
 
 declare type IhwTaskaskAndShowName = {
-  useView: IhwUseView,
+  useView: IhwUseViewaskAndShowName,
   next: IhwNextTaskaskAndShowName,
   roles: IhwUseRoles
 } | {
@@ -100,7 +100,23 @@ declare type IhwNextTaskaskAndShowName = IhwTaskNameaskAndShowName | {
   [task in IhwTaskNameaskAndShowName]?: (vars: IhwScopeaskAndShowName) => boolean
 }
 
-declare type IhwUseView = 'askFirstName' | 'askLastName' | 'showFullName'
+declare type IhwUseViewaskAndShowName = {
+  view: 'askFirstName',
+  bind: {
+    firstName: IhwScopePathaskAndShowName
+  }
+} | {
+  view: 'askLastName',
+  bind: {
+    lastName: IhwScopePathaskAndShowName
+  }
+} | {
+  view: 'showFullName',
+  bind: {
+    fullName: IhwScopePathaskAndShowName
+  }
+}
+
 declare type IhwUseFunctionaskAndShowName = {
   function: 'concatname',
   input: {

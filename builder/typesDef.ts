@@ -1,4 +1,5 @@
 import * as decl from './typesDecl'
+import '@hoda5/extensions'
 
 export interface Application {
   name: string
@@ -58,7 +59,7 @@ export interface Collection {
 
 export interface Field {
   name: string
-  type: string
+  type: Type
 }
 
 export interface Index {
@@ -81,13 +82,15 @@ export interface Process {
   title: I18N
   caption: I18N
   tasks: Task[]
-  vars: ProcessVar[],
+  vars: ProcessVars,
   roles: string[]
   volatile: boolean
 }
 
-interface ProcessVar extends Field {
-  scope: 'input' | 'output' | 'local'
+interface ProcessVars {
+  input: Field[]
+  output: Field[]
+  local: Field[]
 }
 
 export type NextTask = {
@@ -111,15 +114,16 @@ export interface UseTask {
 
 export interface View {
   name: string
+  fields: Field[]
   content: Widget[]
-  primaryAction?: ViewAction
-  secondaryAction?: ViewAction
-  othersActions?: ViewAction[]
+  primaryAction?: ViewAction | undefined
+  secondaryAction?: ViewAction | undefined
+  othersActions?: ViewAction[] | undefined
 }
 
 export interface UseView {
   ref: View
-  vars: ProcessVar[]
+  bind: BindField[]
 }
 
 export interface ViewAction {
@@ -127,16 +131,11 @@ export interface ViewAction {
   useFunction: "next" | "back" | UseFunction
 }
 
-export type Widget = WidgetEntry | WidgetShow
-
-export interface WidgetEntry {
-  kind: "entry",
-  var: string
-}
-
-export interface WidgetShow {
-  kind: "show",
-  var: string
+export interface Widget {
+  kind: "entry" | "show",
+  children?: Widget[]
+  field?: string,
+  type?: Type
 }
 
 export interface Function {
@@ -149,15 +148,15 @@ export interface Function {
 
 export type Ast = any
 
-export interface FunctionField {
-  local: Field,
-  bind: ProcessVar
+export interface BindField {
+  field: Field,
+  bind: string
 }
 
-export interface UseFunction {
-  function: string
-  input: FunctionField[],
-  output: FunctionField[],
+export type UseFunction = {
+  function: Function
+  input: BindField[],
+  output: BindField[],
 }
 
 export interface DefWorkspace extends Workspace {
@@ -177,7 +176,7 @@ export interface BuilderInfo {
   ws: Workspace,
   config: BuilderConfig
   onlyLang?: Lang
-  builderName: string,  
+  builderName: string,
 }
 
 export interface BuilderImpl {
@@ -226,9 +225,13 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     } = (typeof obj[prop] == 'string' ? { [defLang]: obj[prop] } : obj[prop]) as any
     const ret: I18N = {}
     appLangs.forEach((l) => {
+      if (onlyLang && onlyLang !== l) return
+      const msg = msgs[l]
+      if (!msg) throw fail(obj, 'no translation for ' + prop + '.' + l)
+      const params: Field[] = []
       ret[l] = {
-        msg: msgs[l],
-        params: []
+        msg,
+        params
       }
     })
     return ret
@@ -278,21 +281,26 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     if (!declPkg) throw new Error('invalid package ' + pkgname)
     const pkgRoles = vpkgroles()
 
-    const pkgViews = await vviews(declPkg.views)
-    const pkgFunctions = await vfunctions(declPkg.functions)
-    const pkgProcesses = await vprocesses(declPkg.processes)
+    const redefines = vpackageOpt(declPkg.redefines)
+    const pkgUses = vpackages(declPkg.uses)
+    const pkgtypes = vtypes(declPkg.types)
+    const pkgFunctions = vfunctions(declPkg.functions)
+    const pkgViews = vviews(declPkg.views)
+    const pkgCollections = vcollections(declPkg.collections)
+    const pkgDocuments = vdocuments(declPkg.documents)
+    const pkgProcesses = vprocesses(declPkg.processes)
 
     const pkg: Package = {
       name: videntifier(declPkg, 'name'),
-      redefines: await vpackageOpt(declPkg.redefines),
-      uses: await vpackages(declPkg.uses),
-      types: await vtypes(declPkg.types),
-      collections: await vcollections(declPkg.collections),
-      documents: await vdocuments(declPkg.documents),
-      processes: pkgProcesses,
+      redefines: await redefines,
+      uses: await pkgUses,
+      types: await pkgtypes,
+      collections: await pkgCollections,
+      documents: await pkgDocuments,
+      processes: await pkgProcesses,
       roles: pkgRoles,
-      views: pkgViews,
-      functions: pkgFunctions,
+      views: await pkgViews,
+      functions: await pkgFunctions,
     }
 
     return pkg
@@ -324,15 +332,16 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     }
 
     async function vtypes (types: decl.Types) {
-      return null as any as Type[]
-    }
-
-    async function vcollections (collections: decl.Collections) {
-      return null as any as Collection[]
-    }
-
-    async function vdocuments (documents: decl.Documents) {
-      return null as any as Document[]
+      const ret: Type[] = []
+      Object.keys(types).forEach((n) => {
+        const d = types[n]
+        const t: Type = {
+          name: n,
+          base: d.base
+        }
+        return t
+      })
+      return ret
     }
 
     async function vprocesses (processes: decl.Processes) {
@@ -346,7 +355,7 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     }
 
     async function vprocess (procName: string, declProc: decl.Process) {
-      const procVars = await vvars()
+      const procVars = await vprocVars()
       const procTasks = await vtasks()
       const ret: Process = {
         name: procName,
@@ -372,7 +381,7 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
       }
 
       async function vtask (tastName: string, declTask: decl.Task) {
-        const useView: string = (declTask as any).useView
+        const useView: decl.UseView = (declTask as any).useView
         const useFunction: decl.UseFunction = (declTask as any).useFunction
         const ret: Task = {
           name: tastName,
@@ -380,8 +389,8 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
           lane: declTask.lane,
           roles: vrolesuse(declTask, 'roles'),
           next: vnexttasks(),
-          useFunction: useFunction ? await vuseFunction(useFunction) : undefined,
-          useView: useView ? await vuseView(useView) : undefined,
+          useFunction: useFunction ? await vuseFunctionOnTask(procVars, useFunction) : undefined,
+          useView: useView ? await vuseView(procVars, useView) : undefined,
         }
         return ret
         function vnexttasks () {
@@ -405,33 +414,175 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
         if (!ret) fail(obj, 'invalid taskname: ' + taskname)
         return ret
       }
-      async function vvars () {
+
+      async function vprocVars () {
         const pvars = declProc.vars
-        const ret: ProcessVar[] = []
+        const input = vprocVar(pvars.input)
+        const output = vprocVar(pvars.output)
+        const local = vprocVar(pvars.local)
+        const ret: ProcessVars = {
+          input: await input,
+          output: await output,
+          local: await local
+        }
         return ret
-        // {
-        //   input: Field[],
-        //   output: Field[],
-        //   local: Field[],
-        // }
+      }
+      async function vprocVar (vars: decl.ProcessVars) {
+        const names = Object.keys(vars)
+        return Promise.all(names.map(async (n) => {
+          const field = await vfield(n, vars[n])
+          return field
+        }))
       }
     }
 
-  }
+    async function vfield (fieldname: string, field: decl.Field) {
+      const ret: Field = {
+        name: fieldname,
+        type: await findtype(field.type)
+      }
+      return ret
+    }
 
-  async function vviews (views: decl.Views) {
-    return null as any as View[]
-  }
+    async function findtype (type: string): Promise<Type> {
+      const types = await pkgtypes
+      const ret = types.filter((t) => t.name === type)[0]
+      if (!ret) fail(declPkg, 'invalid type: ' + type)
+      return ret
+    }
 
-  async function vuseView (view: string) {
-    return null as any as UseView
-  }
+    async function vfindview (view: string): Promise<View> {
+      const views = await pkgViews
+      const ret = views.filter((t) => t.name === view)[0]
+      if (!ret) fail(declPkg, 'invalid views: ' + views)
+      return ret
+    }
 
-  async function vfunctions (functions: decl.Functions) {
-    return null as any as Function[]
-  }
+    async function vviews (views: decl.Views): Promise<View[]> {
+      const viewsnames = Object.keys(views)
+      return Promise.all(viewsnames.map(async (n) => {
+        const decl = views[n]
+        const { content, fields } = await vwidgets(decl.content)
+        const primaryAction = decl.primaryAction && vaction(fields, decl.primaryAction)
+        const secondaryAction = decl.secondaryAction && vaction(fields, decl.secondaryAction)
+        const othersActions = decl.othersActions && Promise.all(decl.othersActions.map((a) => vaction(fields, a)))
 
-  async function vuseFunction (useFunction: decl.UseFunction) {
-    return null as any as UseFunction
+        const view: View = {
+          name: n,
+          fields: fields,
+          content: content,
+          primaryAction: await primaryAction,
+          secondaryAction: await secondaryAction,
+          othersActions: await othersActions
+        }
+        return view
+      }))
+    }
+
+    async function vwidgets (widgets: decl.Widget[]): Promise<{ fields: Field[], content: Widget[] }> {
+      const fields: Field[] = []
+      const content: Widget[] = []
+      await Promise.all(widgets.map(async (d) => {
+        const children = d.children && await vwidgets(d.children)
+        const type = d && d.type ? await findtype(d.type) : undefined
+        const w: Widget = {
+          kind: d.kind,
+          children: children?.content,
+          field: d && d.field,
+          type: await type
+        }
+        content.push(w)
+        const fs: Field[] = children ? children.fields : []
+        if (d && d.field) fs.push({ name: d.field as any, type: type as any })
+        fs.forEach((f) => {
+          if (!fields.some((f2) => f2.name === f.name))
+            fields.push(f)
+        })
+      }))
+      return { fields, content }
+    }
+
+    async function vviewindfields (from: View, vars: ProcessVars, useView: decl.BindFields): Promise<BindField[]> {
+      const ret: BindField[] = []
+      await Promise.all(from.fields.map((f) => {
+        const bindto = useView[f.name]
+        if (!bindto) fail(from, 'falta bind para ' + f.name)
+        const bind = h5lib.getPropByPath(vars, bindto)
+        if (!bind) fail(from, 'erro no bind de ' + f.name + ' para ' + bindto)
+        ret.push({
+          field: f,
+          bind
+        })
+      }))
+      return ret
+    }
+
+    async function vfunctionbindfields (from: Function, bindfields: Field[], useFunction: decl.BindFields): Promise<{
+      input: BindField[]
+      output: BindField[]
+    }> {
+      const ret: BindField[] = []
+      await Promise.all(fields.map((f) => {
+        const bindto = useFunction[f.name]
+        if (!bindto) fail(from, 'falta bind para ' + f.name)
+        const bind = h5lib.getPropByPath(vars, bindto)
+        if (!bind) fail(from, 'erro no bind de ' + f.name + ' para ' + bindto)
+        ret.push({
+          field: f,
+          bind
+        })
+      }))
+      return ret
+    }
+
+
+    async function vuseView (procVars: ProcessVars, useView: decl.UseView): Promise<UseView> {
+      const ref = await vfindview(useView.view)
+      const bind = await vviewindfields(ref, procVars, useView.bind)
+      const ret: UseView = { ref, bind }
+      return ret
+    }
+
+    async function vaction (fields: Field[], action: decl.ViewAction): Promise<ViewAction> {
+      const ret: ViewAction = {
+        caption: vi18n(action, 'caption'),
+        useFunction: await vuseFunctionOnView(fields, action.useFunction)
+      }
+      return ret
+    }
+
+    async function vfindfunction (funcname: string): Promise<Function> {
+      const funcs = await pkgFunctions
+      const ret = funcs.filter((f) => f.name === funcname)[0]
+      if (!ret) fail(declPkg, 'invalid function: ' + funcname)
+      return ret
+    }
+    async function vuseFunctionOnView (fields: Field[], useFunction: "next" | "back" | decl.UseFunction): Promise<"next" | "back" | UseFunction> {
+      if (typeof useFunction === 'string') return useFunction;
+      const ref = await vfindfunction(useFunction.function)
+      const input = await vfunctionbindfields(ref, fields, useFunction.input)
+      const output = await vfunctionbindfields(ref, fields, useFunction.output)
+      const ret: UseFunction = { function: ref, input, output }
+      return ret
+    }
+
+    async function vfunctions (functions: decl.Functions) {
+      return xnull as any as Function[]
+    }
+
+    async function vuseFunctionOnTask (procVars: ProcessVars, useFunction: "next" | "back" | decl.UseFunction): Promise<UseFunction> {
+      const ref = await vfindview(useView.view)
+      const bind = await vviewindfields(ref, procVars, useView.bind)
+      const ret: UseView = { ref, bind }
+      return ret
+    }
+
+    async function vcollections (collections: decl.Collections) {
+      return null as any as Collection[]
+    }
+
+    async function vdocuments (documents: decl.Documents) {
+      return null as any as Document[]
+    }
   }
 }
