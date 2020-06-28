@@ -105,7 +105,7 @@ export interface Task {
   roles: string[]
   next: NextTask[]
   useView?: UseView
-  useFunction?: UseFunction
+  useFunction?: "next" | "back" | UseFunction
 }
 
 export interface UseTask {
@@ -138,19 +138,14 @@ export interface Widget {
   type?: Type
 }
 
+export type FunctionLevel = "cpu" | "io" | "net"
+
 export interface Function {
   name: string
-  level: "cpu" | "local" | "net"
+  level: FunctionLevel
   input: Field[]
   output: Field[]
   code: Ast
-}
-
-export type Ast = any
-
-export interface BindField {
-  field: Field,
-  bind: string
 }
 
 export type UseFunction = {
@@ -158,6 +153,13 @@ export type UseFunction = {
   input: BindField[],
   output: BindField[],
 }
+
+export interface BindField {
+  field: Field,
+  bind: Field
+}
+
+export type Ast = any
 
 export interface DefWorkspace extends Workspace {
   apps: { [appName: string]: decl.Application },
@@ -417,9 +419,9 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
 
       async function vprocVars () {
         const pvars = declProc.vars
-        const input = vprocVar(pvars.input)
-        const output = vprocVar(pvars.output)
-        const local = vprocVar(pvars.local)
+        const input = vfields(pvars.input)
+        const output = vfields(pvars.output)
+        const local = vfields(pvars.local)
         const ret: ProcessVars = {
           input: await input,
           output: await output,
@@ -427,13 +429,15 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
         }
         return ret
       }
-      async function vprocVar (vars: decl.ProcessVars) {
-        const names = Object.keys(vars)
-        return Promise.all(names.map(async (n) => {
-          const field = await vfield(n, vars[n])
-          return field
-        }))
-      }
+
+    }
+
+    async function vfields (vars: decl.Fields) {
+      const names = Object.keys(vars)
+      return Promise.all(names.map(async (n) => {
+        const field = await vfield(n, vars[n])
+        return field
+      }))
     }
 
     async function vfield (fieldname: string, field: decl.Field) {
@@ -517,25 +521,6 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
       return ret
     }
 
-    async function vfunctionbindfields (from: Function, bindfields: Field[], useFunction: decl.BindFields): Promise<{
-      input: BindField[]
-      output: BindField[]
-    }> {
-      const ret: BindField[] = []
-      await Promise.all(fields.map((f) => {
-        const bindto = useFunction[f.name]
-        if (!bindto) fail(from, 'falta bind para ' + f.name)
-        const bind = h5lib.getPropByPath(vars, bindto)
-        if (!bind) fail(from, 'erro no bind de ' + f.name + ' para ' + bindto)
-        ret.push({
-          field: f,
-          bind
-        })
-      }))
-      return ret
-    }
-
-
     async function vuseView (procVars: ProcessVars, useView: decl.UseView): Promise<UseView> {
       const ref = await vfindview(useView.view)
       const bind = await vviewindfields(ref, procVars, useView.bind)
@@ -557,24 +542,53 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
       if (!ret) fail(declPkg, 'invalid function: ' + funcname)
       return ret
     }
-    async function vuseFunctionOnView (fields: Field[], useFunction: "next" | "back" | decl.UseFunction): Promise<"next" | "back" | UseFunction> {
+
+    async function vuseFunctionOnView (viewfields: Field[], useFunction: "next" | "back" | decl.UseFunction): Promise<"next" | "back" | UseFunction> {
       if (typeof useFunction === 'string') return useFunction;
       const ref = await vfindfunction(useFunction.function)
-      const input = await vfunctionbindfields(ref, fields, useFunction.input)
-      const output = await vfunctionbindfields(ref, fields, useFunction.output)
-      const ret: UseFunction = { function: ref, input, output }
+      const input = vfunctionbindfields(ref, viewfields, useFunction.input, 'input')
+      const output = vfunctionbindfields(ref, viewfields, useFunction.output, 'output')
+      return { function: ref, input: await input, output: await output }
+    }
+
+    async function vfunctionbindfields (from: Function, viewfields: Field[], partfields: decl.BindFields, scope: 'input' | 'output'): Promise<BindField[]> {
+      const ret: BindField[] = []
+      await Promise.all(viewfields.map((vf) => {
+        const bindto = partfields[vf.name]
+        if (!bindto) fail(from, 'falta bind para ' + from.name + ' ' + scope + '.' + vf.name)
+        const bind = from[scope].filter((ff) => ff.name === bindto)[0]
+        if (!bind) fail(from, 'erro no bind de ' + from.name + ' ' + scope + '.' + bindto)
+        ret.push({
+          field: vf,
+          bind
+        })
+      }))
       return ret
     }
 
-    async function vfunctions (functions: decl.Functions) {
-      return xnull as any as Function[]
+    async function vuseFunctionOnTask (procVars: ProcessVars, useFunction: "next" | "back" | decl.UseFunction): Promise<"next" | "back" | UseFunction> {
+      if (typeof useFunction === 'string') return useFunction
+      const ref = await vfindfunction(useFunction.function)
+      const input = vfunctionbindfields(ref, procVars.input, useFunction.input, 'input')
+      const output = vfunctionbindfields(ref, procVars.output, useFunction.output, 'output')
+      return { function: ref, input: await input, output: await output }
     }
 
-    async function vuseFunctionOnTask (procVars: ProcessVars, useFunction: "next" | "back" | decl.UseFunction): Promise<UseFunction> {
-      const ref = await vfindview(useView.view)
-      const bind = await vviewindfields(ref, procVars, useView.bind)
-      const ret: UseView = { ref, bind }
-      return ret
+    async function vfunctions (functions: decl.Functions): Promise<Function[]> {
+      const funcnames = Object.keys(functions)
+      return await Promise.all(funcnames.map(async (fn) => {
+        const d = functions[fn]
+        const input = vfields(d.input)
+        const output = vfields(d.output)
+        const f: Function = {
+          name: fn,
+          level: d.level,
+          input: await input,
+          output: await output,
+          code: d.code as any as Ast
+        }
+        return f
+      }))
     }
 
     async function vcollections (collections: decl.Collections) {

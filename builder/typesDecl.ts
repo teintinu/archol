@@ -99,16 +99,12 @@ export interface Process {
   caption: I18N
   tasks: Tasks
   vars: {
-    input: ProcessVars,
-    output: ProcessVars,
-    local: ProcessVars,
+    input: Fields,
+    output: Fields,
+    local: Fields,
   }
   roles: string[]
   volatile: boolean
-}
-
-export type ProcessVars = {
-  [varName: string]: Field
 }
 
 export type Tasks = {
@@ -178,8 +174,10 @@ export type Functions = {
   [typeName: string]: Function
 }
 
+export type FunctionLevel = "cpu" | "io" | "net"
+
 export interface Function {
-  level: "cpu" | "local" | "net"
+  level: FunctionLevel
   input: Fields
   output: Fields
   code: string
