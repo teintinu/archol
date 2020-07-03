@@ -175,3 +175,48 @@ declarePackage('hw')
       ]
     }
   })
+  .types({
+    partnome: {
+      base: 'string',
+      validate (val) {
+        return /^\w+/g.test(val)
+      }
+    }
+  })
+  .docs({
+    nomes: {
+      states: ['partial', 'complete'],
+      collection: {
+        fname: {
+          description: 'First name',
+          type: 'partnome'
+        },
+        lname: {
+          description: 'Last name',
+          type: 'partnome'
+        },
+      },
+      indexes: {
+        text: ['fname', 'lname'],
+        porUltimoNome: ['lname']
+      },
+      action: {
+        startHw: {
+          from: 'new',
+          to: 'partial',
+          icon: 'novo',
+          description: 'Iniciar novo',
+          run (fn: string) {
+             this.fname=fn
+          }
+        },
+        finishHw: {
+          from: 'partial',
+          to: 'complete',
+          run (ln: string) {
+            this.lname = ln 
+          }
+        },
+      }
+    }
+  })
