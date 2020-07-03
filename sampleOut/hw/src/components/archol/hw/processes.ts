@@ -2,10 +2,10 @@ import { Process } from '../../archollib'
 export const askAndShowName: Process = {
   pid: 'hw.askAndShowName',
   title: {
-    pt: () => '[object Object]',
+    pt: () => 'Olá mundo',
   },
   caption: {
-    pt: () => '[object Object]',
+    pt: () => 'Pergunta nome e cumprimenta',
   },
   icon: 'scholl',
   volatile: true,

@@ -1,4 +1,4 @@
-import { reactive, ref } from "@vue/composition-api"
+import { reactive } from "@vue/composition-api"
 import { navigate } from "src/router"
 
 export interface Process {

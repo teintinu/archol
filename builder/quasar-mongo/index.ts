@@ -21,15 +21,16 @@ export const quasarMongo: BuilderImpl = {
       writeLines(appDir + '/index.ts', indexlines)
     }
 
-    function saveI18N<T extends object> (lines: string[], ident: string, obj: T, prop: keyof T, allowParams: boolean) {
+    function saveI18N<T> (lines: string[], ident: string, obj: T, prop: keyof T, allowParams: boolean) {
       if (allowParams) throw new Error('todo')
-      const val: any = obj[prop]
+      const val: I18N = obj[prop]
       lines.push(ident + prop + ': {')
       for (const lang of app.langs) save(lang)
       lines.push(ident + '},')
       function save (lang: Lang) {
         const lval = val[lang]
-        lines.push(ident + '  ' + lang + ': () => \'' + lval + '\',')
+        if (!lval) throw new Error('falta traducao')
+        lines.push(ident + '  ' + lang + ': () => \'' + lval.msg + '\',')
       }
     }
 

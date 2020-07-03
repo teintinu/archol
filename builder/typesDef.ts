@@ -15,10 +15,12 @@ export interface Application {
 export type Icon = string
 
 export type I18N = {
-  [lang in Lang]?: {
-    params: Field[],
-    msg: string
-  }
+  [lang in Lang]?: I18NP
+}
+
+export interface I18NP {
+  params: Field[],
+  msg: string
 }
 
 export type Lang = 'pt' | 'en'
