@@ -24,4 +24,6 @@ async function build_ws () {
   ])
 }
 
-build_ws().then(() => console.log('ok'))
+build_ws().then(() => console.log('built'), (e)=>{
+  console.log(e.stack);
+})

@@ -17,6 +17,6 @@ export async function wsDecl (ws: DefWorkspace) {
     lines = lines.concat(await genpkg(pkg))
   }
 
-  await writeLines(ws.tempDir + '/wsdecl/app.d.ts', lines)
+  await writeLines(ws.rootDir + '/decl.d.ts', lines)
 
 }

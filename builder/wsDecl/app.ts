@@ -38,7 +38,7 @@ export async function genapp (packageUrls: string, builders: string) {
   }  
   declare type PackageUrls = ${packageUrls}
       
-  declare types FunctionLevel = 'cpu' | 'io'| 'proc'
+  declare type FunctionLevel = 'cpu' | 'io'| 'proc'
   declare interface Builders {
     ${builders}
   }

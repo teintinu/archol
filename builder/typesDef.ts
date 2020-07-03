@@ -191,6 +191,8 @@ export interface BuilderConfig {
 
 export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang) {
 
+  const allPackages: { [name in string]: () => Promise<Package> } = {}
+
   const declApp: decl.Application = await ws.apps[appname]
   if (!declApp) throw new Error('invalid app name ' + appname)
 
@@ -240,7 +242,7 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
   }
 
   function fail (obj: any, msg: string) {
-    throw new Error(msg)
+    throw new Error(msg + JSON.stringify(obj))
   }
 
   function vbuilders () {
@@ -267,7 +269,7 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
 
   async function vpackages (uses: string[]): Promise<Package[]> {
     const ret: Package[] = []
-    for (const pkgname of declApp.uses) {
+    for (const pkgname of uses) {
       const pkg = await vpackage(pkgname)
       ret.push(pkg)
     }
@@ -281,29 +283,41 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
   async function vpackage (pkgname: string): Promise<Package> {
     const declPkg: decl.Package = await ws.pkgs[pkgname]
     if (!declPkg) throw new Error('invalid package ' + pkgname)
+
+    const ppkg = allPackages[pkgname]
+    if (ppkg) return ppkg()
+
+    const pkg = {
+      name: videntifier(declPkg, 'name'),
+    } as any
+    allPackages[pkgname] = () => pkg
+
     const pkgRoles = vpkgroles()
+    pkg.roles = pkgRoles
 
     const redefines = vpackageOpt(declPkg.redefines)
-    const pkgUses = vpackages(declPkg.uses)
-    const pkgtypes = vtypes(declPkg.types)
-    const pkgFunctions = vfunctions(declPkg.functions)
-    const pkgViews = vviews(declPkg.views)
-    const pkgCollections = vcollections(declPkg.collections)
-    const pkgDocuments = vdocuments(declPkg.documents)
-    const pkgProcesses = vprocesses(declPkg.processes)
+    pkg.redefines = await redefines
 
-    const pkg: Package = {
-      name: videntifier(declPkg, 'name'),
-      redefines: await redefines,
-      uses: await pkgUses,
-      types: await pkgtypes,
-      collections: await pkgCollections,
-      documents: await pkgDocuments,
-      processes: await pkgProcesses,
-      roles: pkgRoles,
-      views: await pkgViews,
-      functions: await pkgFunctions,
-    }
+    const pkgUses = vpackages(declPkg.uses)
+    pkg.uses = pkgUses
+
+    const pkgtypes = vtypes(declPkg.types)
+    pkg.types = await pkgtypes
+
+    const pkgFunctions = vfunctions(declPkg.functions)
+    pkg.functions = await pkgFunctions
+
+    const pkgViews = vviews(declPkg.views)
+    pkg.views = await pkgViews
+
+    const pkgCollections = vcollections(declPkg.collections)
+    pkg.collections = await pkgCollections
+
+    const pkgDocuments = vdocuments(declPkg.documents)
+    pkg.documents = await pkgDocuments
+
+    const pkgProcesses = vprocesses(declPkg.processes)
+    pkg.processes = await pkgProcesses
 
     return pkg
 
@@ -325,7 +339,9 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     }
 
     function vrolesuse<T extends object> (obj: T, prop: keyof T): string[] {
-      const roles: string[] = obj[prop] as any
+      let roles: string | string[] = obj[prop] as any
+      if (!roles) fail(obj, 'roles não foi definido')
+      if (typeof roles === 'string') roles = [roles]
       return roles.map((r) => {
         if (!pkgRoles.some((pr) => pr.name === r))
           fail(obj, 'invalid role: ' + r)
@@ -335,7 +351,7 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
 
     async function vtypes (types: decl.Types) {
       const ret: Type[] = []
-      Object.keys(types).forEach((n) => {
+      if (types) Object.keys(types).forEach((n) => {
         const d = types[n]
         const t: Type = {
           name: n,
@@ -357,8 +373,9 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     }
 
     async function vprocess (procName: string, declProc: decl.Process) {
+      const procTasks: Task[] = []
       const procVars = await vprocVars()
-      const procTasks = await vtasks()
+      await vtasks()
       const ret: Process = {
         name: procName,
         start: vtaskuse(declProc, declProc.start),
@@ -373,28 +390,25 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
       return ret
 
       async function vtasks () {
-        const ret: Task[] = []
         const taskNames = Object.keys(declProc.tasks)
         for (const taskName of taskNames) {
-          const t = await vtask(taskName, declProc.tasks[taskName])
-          ret.push(t)
+          const t: Task = {
+            name: taskName
+          } as any
+          procTasks.push(t)
         }
-        return ret
+        await Promise.all(procTasks.map((t) => vtask(t, declProc.tasks[t.name])))
       }
 
-      async function vtask (tastName: string, declTask: decl.Task) {
-        const useView: decl.UseView = (declTask as any).useView
-        const useFunction: decl.UseFunction = (declTask as any).useFunction
-        const ret: Task = {
-          name: tastName,
-          pool: declTask.pool,
-          lane: declTask.lane,
-          roles: vrolesuse(declTask, 'roles'),
-          next: vnexttasks(),
-          useFunction: useFunction ? await vuseFunctionOnTask(procVars, useFunction) : undefined,
-          useView: useView ? await vuseView(procVars, useView) : undefined,
-        }
-        return ret
+      async function vtask (task: Task, declTask: decl.Task) {
+        const uf: decl.UseFunction = (declTask as any).useFunction
+        const uv: decl.UseView = (declTask as any).useView
+        task.pool = declTask.pool
+        task.lane = declTask.lane
+        if (uv) task.roles = vrolesuse(declTask, 'roles')
+        task.next = vnexttasks()
+        task.useView = uv ? await vuseView(procVars, uv) : undefined
+        task.useFunction = uf ? await vuseFunctionOnTask(procVars, uf) : undefined
         function vnexttasks () {
           const ret: NextTask[] = []
           const n = declTask.next
@@ -448,7 +462,17 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
       return ret
     }
 
+    async function vfindfield (scope: Field[], fieldname: string): Promise<Field> {
+      const ret = scope.filter((f) => f.name === fieldname)[0]
+      if (!ret) fail(scope, fieldname + ' não encontado')
+      return ret
+    }
+
     async function findtype (type: string): Promise<Type> {
+      if (type === 'string') return {
+        base: 'string',
+        name: 'string'
+      }
       const types = await pkgtypes
       const ret = types.filter((t) => t.name === type)[0]
       if (!ret) fail(declPkg, 'invalid type: ' + type)
@@ -475,9 +499,9 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
           name: n,
           fields: fields,
           content: content,
-          primaryAction: await primaryAction,
-          secondaryAction: await secondaryAction,
-          othersActions: await othersActions
+          primaryAction: primaryAction && await primaryAction,
+          secondaryAction: secondaryAction && await secondaryAction,
+          othersActions: othersActions && await othersActions
         }
         return view
       }))
@@ -508,12 +532,14 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
 
     async function vviewindfields (from: View, vars: ProcessVars, useView: decl.BindFields): Promise<BindField[]> {
       const ret: BindField[] = []
-      await Promise.all(from.fields.map((f) => {
+      await Promise.all(from.fields.map(async (f) => {
         const bindto = useView[f.name]
         if (!bindto) fail(from, 'falta bind para ' + f.name)
-        const bind = h5lib.getPropByPath(vars, bindto)
+        const m = /^(\w*)\.(.*)$/g.exec(bindto)
+        const scope: Field[] = m && m[1] && h5lib.getPropByPath(vars, m[1])
+        const bind = scope && m && m[2] && await vfindfield(scope, m[2])
         if (!bind) fail(from, 'erro no bind de ' + f.name + ' para ' + bindto)
-        ret.push({
+        else ret.push({
           field: f,
           bind
         })
@@ -531,7 +557,7 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     async function vaction (fields: Field[], action: decl.ViewAction): Promise<ViewAction> {
       const ret: ViewAction = {
         caption: vi18n(action, 'caption'),
-        useFunction: await vuseFunctionOnView(fields, action.useFunction)
+        useFunction: await vuseFunctionOnView(fields, action.run)
       }
       return ret
     }

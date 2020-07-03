@@ -4,12 +4,16 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug Builder",
+      "name": "Debug - Archol Builder",
       "program": "${workspaceFolder}/builder/index.ts",
       "preLaunchTask": "tsc: build - tsconfig.json",
       "outFiles": [
         "${workspaceFolder}/.temp/dist/builder/**/*.js"
-      ]
+      ],
+      "skipFiles": [
+        "${workspaceFolder}/node_modules/**/*.js",
+        "<node_internals>/**/*.js"
+      ]      
     },
     {
       "type": "node",

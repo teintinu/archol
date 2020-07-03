@@ -160,7 +160,7 @@ export interface View {
 
 export interface ViewAction {
   caption: I18N
-  useFunction: "next" | "back" | UseFunction
+  run: "next" | "back" | UseFunction
 }
 
 export interface Widget {

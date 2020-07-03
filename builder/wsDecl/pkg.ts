@@ -15,7 +15,7 @@ export async function genpkg (pkg: Package) {
   }).join('\n')
 
   const viewsnames = Object.keys(pkg.views)
-  const useview = viewsnames.map((v) => {
+  const pkgviewnames = viewsnames.map((v) => {
     return '"' + v + '"'
   }).join('|')
   const viewsDecl = viewsnames.map((viewname) => {
@@ -47,7 +47,7 @@ ${processesDecl}
     }): I${pkg.name}Functions
   }
 
-  declare type I${pkg.name}UseView = ${useview}
+  declare type I${pkg.name}ViewNames = ${pkgviewnames}
 
   declare type I${pkg.name}Fields = {
     [fieldName: string]: I${pkg.name}Field
@@ -78,9 +78,9 @@ ${viewsDecl}
     const inputNames = Object.keys(proc.vars.input);
     const scopeInput = inputNames
       .map((n) => `      ${n}: ${basetype(proc.vars.input[n].type)}`)
-    const outputNames = Object.keys(proc.vars.ouput);
+    const outputNames = Object.keys(proc.vars.output);
     const scopeOutput = outputNames
-      .map((n) => `      ${n}: ${basetype(proc.vars.ouput[n].type)}`)
+      .map((n) => `      ${n}: ${basetype(proc.vars.output[n].type)}`)
     const localNames = Object.keys(proc.vars.local);
     const scopeLocal = localNames
       .map((n) => `      ${n}: ${basetype(proc.vars.local[n].type)}`)
@@ -130,15 +130,6 @@ ${scopeLocal}
   declare type I${pkg.name}Tasks${procname} = {
     [taskName: string]: I${pkg.name}Task${procname}
   }
-
-  declare type I${pkg.name}Task${procname} = {
-    useView: I${pkg.name}UseView,
-    next: I${pkg.name}NextTask${procname},
-    roles: I${pkg.name}UseRoles
-  } | {
-    useFunction: I${pkg.name}UseFunction${procname},
-    next: I${pkg.name}NextTask${procname},
-  }
   
   declare type I${pkg.name}NextTask${procname} = I${pkg.name}TaskName${procname} | {
     [task in I${pkg.name}TaskName${procname}]?: (vars: I${pkg.name}Scope${procname}) => boolean
@@ -150,6 +141,8 @@ ${scopeLocal}
 
     let firsttask = true
     let flines: string[] = []
+    const itasklines: string[] = [`declare type I${pkg.name}Task${procname} =`]
+    let itasklinespipe = false
     for (const funcname of functionsNames) {
       const func = pkg.functions[funcname]
       const finputname = Object.keys(pkg.functions[funcname].input)
@@ -163,6 +156,13 @@ ${scopeLocal}
 
       if (firsttask) firsttask = false
       else lines.push('  } | {')
+
+      itasklines.push(` ${itasklinespipe ? '|' : ''} {
+        useFunction: I${pkg.name}UseFunction${procname},
+        next: I${pkg.name}NextTask${procname},
+      }`)
+      itasklinespipe = true
+
       lines = lines.concat(`   
     function: '${funcname}',
     input: {
@@ -182,40 +182,55 @@ ${finputUse}
     
     declare interface I${pkg.name}INPUT${funcname} {
 ${fscopeInput}
-      first: string
-      last: string
     }
     
     declare interface I${pkg.name}OUTPUT${funcname} {
 ${fscopeOutput}
-      full: string
     }`.split('\n'))
 
     }
     lines.push('  }')
     lines = lines.concat(flines)
 
-    if (procCount === 1) {
-      for (const viewname of viewsnames) {
-        const view = pkg.views[viewname]
+    for (const viewname of viewsnames) {
+      const view = pkg.views[viewname]
+      itasklines.push(`
+        ${itasklinespipe ? '|' : ''} {
+          useView: {
+            view: '${viewname}'
+            bind: I${pkg.name}VBIND${viewname}<I${pkg.name}ScopePath${procname}>
+          },
+          next: I${pkg.name}NextTask${procname},
+          roles: I${pkg.name}UseRoles
+        }
+      `)
+      itasklinespipe = true      
+      if (procCount === 1) {
         const allWidgets = allwidgets(view)
-        const viewfieldsDecl = allWidgets.reduce<string[]>((ret, w) => {
-          if (w.field && w.type) ret.push(`        ${w.field}: ${basetype(w.type)}`)
+        const viewfields = allWidgets.reduce<{ decl: string[], bind: string[] }>((ret, w) => {
+          if (w.field && w.type) {
+            ret.decl.push(`        ${w.field}: ${basetype(w.type)}`)
+            ret.bind.push(`        ${w.field}: S`)
+          }
           return ret
-        }, []).join('\n')
+        }, { decl: [], bind: [] })
         lines = lines.concat(`   
   
       declare interface I${pkg.name}VOPT${viewname} {
         content: I${pkg.name}VCONTENT${viewname}
-        primaryAction: I${pkg.name}Action<I${pkg.name}VDATA${viewname}>
-        secondaryAction?: I${pkg.name}Action<I${pkg.name}VDATA${viewname}>
-        otherActions?: Array<I${pkg.name}Action<I${pkg.name}VDATA${viewname}>>
+        primaryAction?: IAction<I${pkg.name}VDATA${viewname}>
+        secondaryAction?: IAction<I${pkg.name}VDATA${viewname}>
+        otherActions?: Array<IAction<I${pkg.name}VDATA${viewname}>>
       }
       
       declare interface I${pkg.name}VDATA${viewname} {
-${viewfieldsDecl}
+${viewfields.decl.join('\n')}
       }
-      
+
+      declare type I${pkg.name}VBIND${viewname}<S> ={
+        ${viewfields.bind.join('\n')}
+      }
+        
       declare type I${pkg.name}VCONTENT${viewname} = Array<{
         kind: 'show' | 'entry'
         field: string
@@ -224,14 +239,17 @@ ${viewfieldsDecl}
       `.split('\n'))
       }
     }
+
+    itasklines
+    lines = lines.concat(itasklines)
   }
 
   return lines
-  
+
   function basetype (typename: string): string {
+    if ((basicTypes as any)[typename]) return typename
     const t = pkg.types[typename]
     if (t) return t.base as any
-    if ((basicTypes as any)[typename]) return typename
     throw new Error('invalid type: ' + typename)
   }
 
