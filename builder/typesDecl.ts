@@ -23,7 +23,6 @@ export interface Package {
   redefines?: string
   uses: string[]
   types: Types,
-  collections: Collections,
   documents: Documents,
   processes: Processes,
   roles: Roles
@@ -59,15 +58,6 @@ export type Fields = {
   [typeName: string]: Field
 }
 
-export type Collections = {
-  [typeName: string]: Collection
-}
-
-export interface Collection {
-  fields: Fields
-  indexes: Indexes
-}
-
 export interface Field {
   type: string
 }
@@ -85,7 +75,40 @@ export type Documents = {
 }
 
 export interface Document {
-  data: Fields
+  persistence: string
+  states: DocumentStates
+  collection: DocFields
+  actions: DocActions
+}
+
+export interface DocActions {
+  [typeName: string]: DocAction
+}
+
+export interface DocAction {
+  from: string
+  to: string
+  icon: Icon
+  description: I18N
+  run (...args: any[]): Promise<any>
+}
+
+export type DocFields = {
+  [typeName: string]: DocField
+}
+
+export interface DocField {
+  description: I18N
+  type: string
+}
+
+export type DocumentStates = {
+  [stateName: string]: DocumentState
+}
+
+export interface DocumentState {
+  icon: Icon
+  description: I18N
 }
 
 export type Processes = {

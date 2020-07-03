@@ -41,6 +41,14 @@ export async function loadWorkspace (ws: def.Workspace) {
     }
     function views (viewsDecl: decl.Views) {
       pkg.views = viewsDecl
+      return { types }
+    }
+    function types (typesDecl: decl.Types) {
+      pkg.types = typesDecl
+      return { documents }
+    }
+    function documents (docsDecl: decl.Documents) {
+      pkg.documents = docsDecl
       return {  }
     }
   }

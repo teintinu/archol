@@ -179,20 +179,31 @@ declarePackage('hw')
     partnome: {
       base: 'string',
       validate (val) {
-        return /^\w+/g.test(val)
+        if(! /^\w+/g.test(val)) return 'parte de nome inválida'
+        return false
       }
     }
   })
-  .docs({
+  .documents({
     nomes: {
-      states: ['partial', 'complete'],
+      persistence: 'session',
+      states: {
+        partial: {
+          description: 'Parcialmente preenchido',
+          icon: 'partial',
+        },
+        complete: {
+          description: 'Complemente preenchido',
+          icon: 'complete',
+        }
+      },
       collection: {
         fname: {
-          description: 'First name',
+          description: 'Primeiro nome',
           type: 'partnome'
         },
         lname: {
-          description: 'Last name',
+          description: 'Ultimo nome',
           type: 'partnome'
         },
       },
@@ -200,23 +211,25 @@ declarePackage('hw')
         text: ['fname', 'lname'],
         porUltimoNome: ['lname']
       },
-      action: {
+      actions: {
         startHw: {
-          from: 'new',
+          from: 'newDoc',
           to: 'partial',
           icon: 'novo',
           description: 'Iniciar novo',
-          run (fn: string) {
+          async run (fn: string) {
              this.fname=fn
           }
         },
         finishHw: {
           from: 'partial',
           to: 'complete',
-          run (ln: string) {
+          icon: 'finish',
+          description: 'Completar',
+          async run (ln: string) {
             this.lname = ln 
           }
-        },
+        }
       }
     }
   })

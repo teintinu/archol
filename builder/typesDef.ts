@@ -28,7 +28,6 @@ export interface Package {
   redefines?: Package
   uses: Package[]
   types: Type[],
-  collections: Collection[],
   documents: Document[],
   processes: Process[],
   roles: Role[]
@@ -49,12 +48,6 @@ export interface Role {
 export interface Type {
   name: string
   base: "string" | "number" | "boolean" | "date"
-}
-
-export interface Collection {
-  name: string
-  fields: Field[]
-  indexes: Index[]
 }
 
 export interface Field {
@@ -287,10 +280,10 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     const ppkg = allPackages[pkgname]
     if (ppkg) return ppkg()
 
-    const pkg = {
+    const pkg: Package = {
       name: videntifier(declPkg, 'name'),
     } as any
-    allPackages[pkgname] = () => pkg
+    allPackages[pkgname] = async() => pkg
 
     const pkgRoles = vpkgroles()
     pkg.roles = pkgRoles
@@ -299,7 +292,7 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     pkg.redefines = await redefines
 
     const pkgUses = vpackages(declPkg.uses)
-    pkg.uses = pkgUses
+    pkg.uses = await pkgUses
 
     const pkgtypes = vtypes(declPkg.types)
     pkg.types = await pkgtypes
@@ -309,9 +302,6 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
 
     const pkgViews = vviews(declPkg.views)
     pkg.views = await pkgViews
-
-    const pkgCollections = vcollections(declPkg.collections)
-    pkg.collections = await pkgCollections
 
     const pkgDocuments = vdocuments(declPkg.documents)
     pkg.documents = await pkgDocuments
@@ -615,10 +605,6 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
         }
         return f
       }))
-    }
-
-    async function vcollections (collections: decl.Collections) {
-      return null as any as Collection[]
     }
 
     async function vdocuments (documents: decl.Documents) {

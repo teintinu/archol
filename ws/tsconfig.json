@@ -3,6 +3,7 @@
     "module": "None",
     "moduleResolution": "Classic",
     "outFile": "../.temp/ws.js",
+    "noEmitOnError": false,
     "noEmit": false
   },
   "include": [

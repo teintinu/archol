@@ -36,7 +36,16 @@
   }  
   declare type PackageUrls = "hw"
       
+  declare type BasicTypes = "string"|"number"|"boolean"|"date"
+
+  declare type DocPersistence = 'session' | 'persistent'
+  declare interface DocState {
+    icon: Icon
+    description: I18N    
+  }
+
   declare type FunctionLevel = 'cpu' | 'io'| 'proc'
+
   declare interface Builders {
     "quasar-mongo": BuilderConfig
   }
@@ -68,10 +77,10 @@
   }
   
   declare interface IhwField {
-    type: IhwTypes
+    type: IhwTypeName
   }
   
-  declare type IhwTypes = 'string'
+  declare type IhwTypeName = 'string'|'number'|'boolean'|'date'|'partnome'
   
   declare interface IhwFunctions {
     functions (functions: {
@@ -81,10 +90,22 @@
   }
 
   declare interface IhwViews {
-    views (functions: {
+    views (views: {
       askFirstName: IhwVOPTaskFirstName,
       askLastName: IhwVOPTaskLastName,
       showFullName: IhwVOPTshowFullName,      
+    }): IhwTypes
+  }
+
+  declare interface IhwTypes {
+    types (types: {
+      partnome: IhwTOPTpartnome,      
+    }): IhwDocs
+  }
+
+  declare interface IhwDocs {
+    documents (documents: {
+      nomes: IhwDOPTnomes,      
     }): void
   }
   
@@ -205,7 +226,7 @@
       declare type IhwVCONTENTaskFirstName = Array<{
         kind: 'show' | 'entry'
         field: string
-        type: IhwTypes
+        type: IhwTypeName
       }>    
       
    
@@ -228,7 +249,7 @@
       declare type IhwVCONTENTaskLastName = Array<{
         kind: 'show' | 'entry'
         field: string
-        type: IhwTypes
+        type: IhwTypeName
       }>    
       
    
@@ -251,7 +272,7 @@
       declare type IhwVCONTENTshowFullName = Array<{
         kind: 'show' | 'entry'
         field: string
-        type: IhwTypes
+        type: IhwTypeName
       }>    
       
 declare type IhwTaskaskAndShowName =
@@ -293,3 +314,51 @@ declare type IhwTaskaskAndShowName =
           roles: IhwUseRoles
         }
       
+
+    declare interface IhwTOPTpartnome {
+      base: BasicTypes
+      validate (val: string): string|false
+    }
+    
+
+  declare type IhwColFields = {
+    [fieldName: string]: IhwColField
+  }
+  
+  declare interface IhwColField {
+    description: string
+    type: IhwTypeName
+  }
+
+    declare type IhwDOCOLNAMEnomes = "fname"|"lname"
+    declare interface IhwDOPTnomes {
+      persistence: DocPersistence
+      states: {
+        partial: DocState
+        complete: DocState
+      }
+      collection: IhwColFields
+      indexes: {[name:string]:IhwDOCOLNAMEnomes[]}
+      actions: IhwDOCACTIONSnomes
+    }
+    
+    declare interface IhwDOCACTIONSnomes {
+
+        startHw: {
+          from: 'newDoc'|"partial"|"complete",
+          to: "partial"|"complete",
+          icon: Icon,
+          description: I18N,
+          run (fn: string): Promise<any>
+        }
+      
+
+        finishHw: {
+          from: 'newDoc'|"partial"|"complete",
+          to: "partial"|"complete",
+          icon: Icon,
+          description: I18N,
+          run (fn: string): Promise<any>
+        }
+      
+}

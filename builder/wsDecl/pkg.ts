@@ -4,17 +4,17 @@ export async function genpkg (pkg: Package) {
 
   let procCount = 0
 
-  const processesNames = Object.keys(pkg.processes)
+  const processesNames = Object.keys(pkg.processes||{})
   const processesDecl = processesNames.map((procname) => {
     return `      ${procname}: I${pkg.name}Process${procname},`
   }).join('\n')
 
-  const functionsNames = Object.keys(pkg.functions)
+  const functionsNames = Object.keys(pkg.functions||{})
   const functionsDecl = functionsNames.map((funcname) => {
     return `      ${funcname}: I${pkg.name}OPT${funcname},`
   }).join('\n')
 
-  const viewsnames = Object.keys(pkg.views)
+  const viewsnames = Object.keys(pkg.views||{})
   const pkgviewnames = viewsnames.map((v) => {
     return '"' + v + '"'
   }).join('|')
@@ -22,7 +22,21 @@ export async function genpkg (pkg: Package) {
     return `      ${viewname}: I${pkg.name}VOPT${viewname},`
   }).join('\n')
 
-  const rolesnames = Object.keys(pkg.roles)
+  const typesnames = Object.keys(pkg.types||{})
+  const basictypesnames = Object.keys(basicTypes||{})
+  const typesDecl = typesnames.map((typename) => {
+    return `      ${typename}: I${pkg.name}TOPT${typename},`
+  }).join('\n')
+  const pkgtypenames = basictypesnames.concat(typesnames).map((typename) => {
+    return `'${typename}'`
+  }).join('|')
+
+  const docsnames = Object.keys(pkg.documents||{})
+  const docsDecl = docsnames.map((docname) => {
+    return `      ${docname}: I${pkg.name}DOPT${docname},`
+  }).join('\n')
+
+  const rolesnames = Object.keys(pkg.roles||{})
   const rolesDecl = rolesnames.map((r) => {
     return '"' + r + '"'
   }).join('|')
@@ -54,10 +68,10 @@ ${processesDecl}
   }
   
   declare interface I${pkg.name}Field {
-    type: I${pkg.name}Types
+    type: I${pkg.name}TypeName
   }
   
-  declare type I${pkg.name}Types = 'string'
+  declare type I${pkg.name}TypeName = ${pkgtypenames}
   
   declare interface I${pkg.name}Functions {
     functions (functions: {
@@ -66,8 +80,20 @@ ${functionsDecl}
   }
 
   declare interface I${pkg.name}Views {
-    views (functions: {
+    views (views: {
 ${viewsDecl}      
+    }): I${pkg.name}Types
+  }
+
+  declare interface I${pkg.name}Types {
+    types (types: {
+${typesDecl}      
+    }): I${pkg.name}Docs
+  }
+
+  declare interface I${pkg.name}Docs {
+    documents (documents: {
+${docsDecl}      
     }): void
   }
   
@@ -75,13 +101,13 @@ ${viewsDecl}
   for (const procname of processesNames) {
     procCount++
     const proc = pkg.processes[procname]
-    const inputNames = Object.keys(proc.vars.input);
+    const inputNames = Object.keys(proc.vars?.input||{});
     const scopeInput = inputNames
       .map((n) => `      ${n}: ${basetype(proc.vars.input[n].type)}`)
-    const outputNames = Object.keys(proc.vars.output);
+    const outputNames = Object.keys(proc.vars?.output||{});
     const scopeOutput = outputNames
       .map((n) => `      ${n}: ${basetype(proc.vars.output[n].type)}`)
-    const localNames = Object.keys(proc.vars.local);
+    const localNames = Object.keys(proc.vars?.local||{});
     const scopeLocal = localNames
       .map((n) => `      ${n}: ${basetype(proc.vars.local[n].type)}`)
 
@@ -90,7 +116,7 @@ ${viewsDecl}
       .concat(localNames.map((l) => '"local.' + l + '"'))
       .join('|')
 
-    const tasksnames = Object.keys(proc.tasks)
+    const tasksnames = Object.keys(proc.tasks||{})
     const procTaskNames = tasksnames.map((t) => '"' + t + '"').join('|')
 
     lines = lines.concat(`
@@ -141,15 +167,15 @@ ${scopeLocal}
 
     let firsttask = true
     let flines: string[] = []
-    const itasklines: string[] = [`declare type I${pkg.name}Task${procname} =`]
+    let itasklines: string[] = [`declare type I${pkg.name}Task${procname} =`]
     let itasklinespipe = false
     for (const funcname of functionsNames) {
       const func = pkg.functions[funcname]
-      const finputname = Object.keys(pkg.functions[funcname].input)
+      const finputname = Object.keys(pkg.functions[funcname].input||{})
       const finputUse = finputname.map((i) => `      ${i}: I${pkg.name}ScopePath${procname}`).join('\n')
       const fscopeInput = finputname
         .map((n) => `      ${n}: ${basetype(func.input[n].type)}`)
-      const foutputname = Object.keys(pkg.functions[funcname].output)
+      const foutputname = Object.keys(pkg.functions[funcname].output||{})
       const foutputUse = foutputname.map((o) => `      ${o}: I${pkg.name}ScopePath${procname}`).join('\n')
       const fscopeOutput = foutputname
         .map((n) => `      ${n}: ${basetype(func.output[n].type)}`)
@@ -157,10 +183,10 @@ ${scopeLocal}
       if (firsttask) firsttask = false
       else lines.push('  } | {')
 
-      itasklines.push(` ${itasklinespipe ? '|' : ''} {
+      itasklines = itasklines.concat(` ${itasklinespipe ? '|' : ''} {
         useFunction: I${pkg.name}UseFunction${procname},
         next: I${pkg.name}NextTask${procname},
-      }`)
+      }`.split('\n'))
       itasklinespipe = true
 
       lines = lines.concat(`   
@@ -194,7 +220,7 @@ ${fscopeOutput}
 
     for (const viewname of viewsnames) {
       const view = pkg.views[viewname]
-      itasklines.push(`
+      itasklines = itasklines.concat(`
         ${itasklinespipe ? '|' : ''} {
           useView: {
             view: '${viewname}'
@@ -203,8 +229,8 @@ ${fscopeOutput}
           next: I${pkg.name}NextTask${procname},
           roles: I${pkg.name}UseRoles
         }
-      `)
-      itasklinespipe = true      
+      `.split('\n'))
+      itasklinespipe = true
       if (procCount === 1) {
         const allWidgets = allwidgets(view)
         const viewfields = allWidgets.reduce<{ decl: string[], bind: string[] }>((ret, w) => {
@@ -234,16 +260,69 @@ ${viewfields.decl.join('\n')}
       declare type I${pkg.name}VCONTENT${viewname} = Array<{
         kind: 'show' | 'entry'
         field: string
-        type: I${pkg.name}Types
+        type: I${pkg.name}TypeName
       }>    
       `.split('\n'))
       }
     }
 
-    itasklines
     lines = lines.concat(itasklines)
   }
 
+  for (const typename of typesnames) {
+    const tp = pkg.types[typename]
+    lines = lines.concat(`
+    declare interface I${pkg.name}TOPT${typename} {
+      base: BasicTypes
+      validate (val: ${tp.base}): string|false
+    }
+    `.split('\n'))
+  }
+
+  lines = lines.concat(`
+  declare type I${pkg.name}ColFields = {
+    [fieldName: string]: I${pkg.name}ColField
+  }
+  
+  declare interface I${pkg.name}ColField {
+    description: string
+    type: I${pkg.name}TypeName
+  }`.split('\n'))
+
+  for (const docname of docsnames) {
+    const doc = pkg.documents[docname]
+
+    const docstatesnames = Object.keys(doc.states||{})
+    const docStateDecl = docstatesnames.map((s) => '        ' + s + ': DocState').join('\n')
+    const colfieldsnames = Object.keys(doc.collection||{})
+    const docactionsnames = Object.keys(doc.actions||{})
+
+    lines = lines.concat(`
+    declare type I${pkg.name}DOCOLNAME${docname} = ${colfieldsnames.map((f) => '"' + f + '"').join('|')}
+    declare interface I${pkg.name}DOPT${docname} {
+      persistence: DocPersistence
+      states: {
+${docStateDecl}
+      }
+      collection: I${pkg.name}ColFields
+      indexes: {[name:string]:I${pkg.name}DOCOLNAME${docname}[]}
+      actions: I${pkg.name}DOCACTIONS${docname}
+    }
+    `.split('\n'))
+    lines.push(`    declare interface I${pkg.name}DOCACTIONS${docname} {`)
+    for (const docactionname of docactionsnames) {
+      lines=lines.concat(`
+        ${docactionname}: {
+          from: 'newDoc'|${docstatesnames.map((s) => '"' + s + '"').join('|')},
+          to: ${docstatesnames.map((s) => '"' + s + '"').join('|')},
+          icon: Icon,
+          description: I18N,
+          run (fn: string): Promise<any>
+        }
+      `.split('\n'))
+    }
+    lines.push(`}`)
+  }
   return lines
 
   function basetype (typename: string): string {

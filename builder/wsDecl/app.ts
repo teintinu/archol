@@ -1,3 +1,4 @@
+import { basicTypes } from '../typesDecl';
 
 export async function genapp (packageUrls: string, builders: string) {
   return `
@@ -38,7 +39,16 @@ export async function genapp (packageUrls: string, builders: string) {
   }  
   declare type PackageUrls = ${packageUrls}
       
+  declare type BasicTypes = ${Object.keys(basicTypes||{}).map((b) => '"' + b + '"').join('|')}
+
+  declare type DocPersistence = 'session' | 'persistent'
+  declare interface DocState {
+    icon: Icon
+    description: I18N    
+  }
+
   declare type FunctionLevel = 'cpu' | 'io'| 'proc'
+
   declare interface Builders {
     ${builders}
   }

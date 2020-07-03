@@ -1,5 +1,5 @@
 import { DefWorkspace } from '../typesDef';
-import { readdir, writeLines } from '../sys';
+import { writeLines } from '../sys';
 import { genapp } from './app';
 import { genpkg } from './pkg';
 
