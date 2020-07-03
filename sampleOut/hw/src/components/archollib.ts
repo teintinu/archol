@@ -26,10 +26,11 @@ interface VolatileInstance {
   view?: any
 }
 
-const volatileInstances = reactive<VolatileInstances>({})
+let volatileInstances: VolatileInstances
 
 export function newInstance (process: Process) {
   if (process.volatile) {
+    if (!volatileInstances) volatileInstances = reactive<VolatileInstances>({})
     const s = (volatileInstanceGen++).toString(16)
     volatileInstances[s] = {
       def: process,
@@ -37,4 +38,21 @@ export function newInstance (process: Process) {
     }
     navigate('/p/' + process.pid + '/' + s)
   }
+}
+
+export interface ProcInfo {
+  defId: string
+  instId: string
+}
+
+let currentProcess: ProcInfo
+
+export function setCurrentProcess (area: 'content', info: ProcInfo) {
+  if (!currentProcess) currentProcess = reactive<ProcInfo>({ defId: '', instId: '' })
+  currentProcess.defId = info.defId
+  currentProcess.instId = info.instId
+}
+
+export function getCurrentProcess (area: 'content'): ProcInfo {
+  return currentProcess
 }
