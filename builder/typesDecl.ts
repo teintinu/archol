@@ -51,11 +51,15 @@ export const basicTypes = {
   date: true
 }
 
+export interface Ast {
+  func: MethodDeclaration
+}
+
 export interface Type {
   base: keyof typeof basicTypes
-  validate (val: any): string | false
-  format (val: any): string
-  parse (val: string): any
+  validate: Ast | false
+  format: Ast | false
+  parse: Ast | false
 }
 
 export type Fields = {
@@ -94,7 +98,7 @@ export interface DocAction {
   to: string
   icon: Icon
   description: I18N
-  run (...args: any[]): Promise<any>
+  run: Ast | false
 }
 
 export type DocFields = {

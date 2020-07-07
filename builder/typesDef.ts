@@ -51,9 +51,9 @@ export interface Role {
 export interface Type {
   name: string
   base: "string" | "number" | "boolean" | "date"
-  validate?(val: any): string | false
-  format?(val: any): string
-  parse?(val: string): any
+  validate: Ast | false
+  format: Ast | false
+  parse: Ast | false
 }
 
 export interface Field {
@@ -348,12 +348,15 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     }
 
     async function vtypes (types: decl.Types) {
-      const ret: Type[] = []
-      if (types) Object.keys(types).forEach((n) => {
+      let ret: Type[] = []
+      if (types) ret = Object.keys(types).map((n) => {
         const d = types[n]
         const t: Type = {
           name: n,
-          base: d.base
+          base: d.base,
+          validate: d.validate,
+          parse: d.parse,
+          format: d.format,
         }
         return t
       })
@@ -419,8 +422,8 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
             } else if (Array.isArray(n)) {
               n.forEach(vnexttask)
             } else {
-              for (const forkname of Object.keys(n)) {                
-                const cond=n[forkname]
+              for (const forkname of Object.keys(n)) {
+                const cond = n[forkname]
                 ret.push({
                   task: vtaskuse(n, forkname),
                   condition: vast(n, cond)
@@ -485,7 +488,10 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     async function findtype (type: string): Promise<Type> {
       if (type === 'string') return {
         base: 'string',
-        name: 'string'
+        name: 'string',
+        validate: false,
+        format: false,
+        parse: false
       }
       const types = await pkgtypes
       const ret = types.filter((t) => t.name === type)[0]

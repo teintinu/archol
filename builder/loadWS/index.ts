@@ -119,7 +119,7 @@ export function loadWorkspace (ws: def.Workspace) {
         }
         else if (p instanceof MethodDeclaration) {
           const propName = parsePropertyName(p.getNameNode())
-          ret[propName] = p
+          ret[propName] = { func: p }
         } else fail(p.getText() + ': tipo de propriedade não tratado')
         // PropertyAssignment | ShorthandPropertyAssignment | SpreadAssignment | MethodDeclaration | AccessorDeclaration;
 

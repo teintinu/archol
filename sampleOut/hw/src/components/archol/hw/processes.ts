@@ -11,4 +11,4 @@ export const askAndShowName: Process = {
   volatile: true,
 }
 
-export const processes = [askAndShowName]
+export const allProcesses = [askAndShowName]

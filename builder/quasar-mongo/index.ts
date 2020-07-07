@@ -10,16 +10,15 @@ export const quasarMongo: BuilderImpl = {
     const pkgnames: string[] = []
     for (const pkg of app.uses) {
       pkgnames.push(pkg.name)
-      indexlines.push('import { processes as ' + pkg.name + ' } from \'./' + pkg.name + '/processes\'')
+      indexlines.push('import * as processes from \'./' + pkg.name + '/processes\'')
+      indexlines.push('import * as types from \'./' + pkg.name + '/types\'')
       saveTypes(pkg)
       saveDocs(pkg)
       saveProcesses(pkg)
     }
     saveAppIndex()
     function saveAppIndex () {
-      indexlines.push('export const allProcesses = [' +
-        pkgnames.map((p) => '...' + p).join(',') + ']'
-      )
+      indexlines.push('export {processes, types}')
       writeLines(appDir + '/index.ts', indexlines)
     }
 
@@ -37,9 +36,12 @@ export const quasarMongo: BuilderImpl = {
     }
 
     function saveAST<T> (lines: string[], ident: string, obj: T, prop: keyof T) {
-      debugger
       const ast: Ast = obj[prop] as any
-      lines.push(ident + ast.func.getSourceFile())
+      if (ast) {
+        const m = ast.func
+        const params = m.getParameters().map((p) => p.getName() + ':' + p.getType().getText())
+        lines.push(ident + m.getName() + '(' + params.join(',') + ') {' + m.getBodyText() + '}')
+      }
     }
 
     function saveProcesses (pkg: Package) {
@@ -56,7 +58,7 @@ export const quasarMongo: BuilderImpl = {
         lines.push('}')
       }
       lines.push('')
-      lines.push('export const processes = [' + pkg.processes.map((p) => p.name).join(',') + ']')
+      lines.push('export const allProcesses = [' + pkg.processes.map((p) => p.name).join(',') + ']')
       writeLines(appDir + '/' + pkg.name + '/processes.ts', lines)
     }
 
@@ -76,10 +78,10 @@ export const quasarMongo: BuilderImpl = {
         lines.push('}')
       }
       lines.push('')
-      lines.push('export const types = [' + pkg.types.map((p) => p.name).join(',') + ']')
+      lines.push('export const allTypes = [' + pkg.types.map((p) => p.name).join(',') + ']')
       writeLines(appDir + '/' + pkg.name + '/types.ts', lines)
     }
-  
+
     function saveDocs (pkg: Package) {
       const lines: string[] = ['import { Process } from \'../../archollib\'']
       for (const p of pkg.processes) {

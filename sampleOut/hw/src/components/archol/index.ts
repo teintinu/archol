@@ -1,2 +1,3 @@
-import { processes as hw } from './hw/processes'
-export const allProcesses = [...hw]
+import * as processes from './hw/processes'
+import * as types from './hw/types'
+export {processes, types}
