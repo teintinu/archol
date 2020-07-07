@@ -52,6 +52,9 @@ export const basicTypes = {
 
 export interface Type {
   base: keyof typeof basicTypes
+  validate (val: any): string | false
+  format (val: any): string
+  parse (val: string): any  
 }
 
 export type Fields = {

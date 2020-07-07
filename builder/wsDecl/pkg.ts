@@ -274,7 +274,9 @@ ${viewfields.decl.join('\n')}
     lines = lines.concat(`
     declare interface I${pkg.name}TOPT${typename} {
       base: BasicTypes
-      validate (val: ${tp.base}): string|false
+      validate? (val: ${tp.base}): string|false
+      format? (val: ${tp.base}): string
+      parse? (str: string): ${tp.base}
     }
     `.split('\n'))
   }

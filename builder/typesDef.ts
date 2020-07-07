@@ -1,4 +1,5 @@
 import * as decl from './typesDecl'
+import { FunctionDeclaration } from 'ts-morph'
 import '@hoda5/extensions'
 
 export interface Application {
@@ -50,6 +51,9 @@ export interface Role {
 export interface Type {
   name: string
   base: "string" | "number" | "boolean" | "date"
+  validate?(val: any): string | false
+  format?(val: any): string
+  parse?(val: string): any
 }
 
 export interface Field {
@@ -90,7 +94,7 @@ interface ProcessVars {
 
 export type NextTask = {
   task: UseTask
-  condition: Ast
+  condition?: Ast
 }
 
 export interface Task {
@@ -154,7 +158,9 @@ export interface BindField {
   bind: Field
 }
 
-export type Ast = any
+export interface Ast {
+  func: FunctionDeclaration
+}
 
 export interface DefWorkspace extends Workspace {
   apps: { [appName: string]: decl.Application },
@@ -193,7 +199,7 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
 
   const defLang = declApp.langs[0]
   const appLangs = declApp.langs
-  const appPackages = await vpackages(declApp.uses);
+  const appPackages = await vusePackages(declApp.uses);
   const def: Application = {
     name: videntifier(declApp, 'name'),
     description: vi18n(declApp, 'description'),
@@ -202,7 +208,7 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     roles: allroles(),
     lang: defLang,
     langs: appLangs,
-    builders: vbuilders()
+    builders: await vbuilders()
   }
   return def
 
@@ -240,10 +246,10 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     throw new Error(msg + JSON.stringify(obj))
   }
 
-  function vbuilders () {
+  async function vbuilders () {
     const ret: BuilderInfo[] = []
     const buildernames = Object.keys(declApp.builders)
-    const all = buildernames.map(async (builderName) => {
+    await Promise.all(buildernames.map(async (builderName) => {
       const b: BuilderInfo = {
         builderName,
         ws,
@@ -251,7 +257,7 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
         config: declApp.builders[builderName],
       }
       ret.push(b)
-    })
+    }))
     return ret
   }
 
@@ -262,21 +268,21 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
       .filter((r, i, a) => a.some((r2, i2) => i === i2 && r.name === r2.name))
   }
 
-  async function vpackages (uses: string[]): Promise<Package[]> {
+  async function vusePackages (uses: string[]): Promise<Package[]> {
     const ret: Package[] = []
     for (const pkgname of uses) {
-      const pkg = await vpackage(pkgname)
+      const pkg = await vusePackage(pkgname)
       ret.push(pkg)
     }
     return ret
   }
 
   async function vpackageOpt (pkgname?: string): Promise<Package | undefined> {
-    if (pkgname) return vpackage(pkgname)
+    if (pkgname) return vusePackage(pkgname)
   }
 
-  async function vpackage (pkgname: string): Promise<Package> {
-    const declPkg: decl.Package = await ws.pkgs[pkgname]
+  async function vusePackage (pkgname: string): Promise<Package> {
+    const declPkg: decl.Package = ws.pkgs[pkgname]
     if (!declPkg) throw new Error('invalid package ' + pkgname)
 
     const ppkg = allPackages[pkgname]
@@ -285,7 +291,7 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     const pkg: Package = {
       name: videntifier(declPkg, 'name'),
     } as any
-    allPackages[pkgname] = async() => pkg
+    allPackages[pkgname] = async () => pkg
 
     const pkgRoles = vpkgroles()
     pkg.roles = pkgRoles
@@ -293,7 +299,7 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     const redefines = vpackageOpt(declPkg.redefines)
     pkg.redefines = await redefines
 
-    const pkgUses = vpackages(declPkg.uses)
+    const pkgUses = vusePackages(declPkg.uses)
     pkg.uses = await pkgUses
 
     const pkgtypes = vtypes(declPkg.types)
@@ -403,11 +409,22 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
         task.useFunction = uf ? await vuseFunctionOnTask(procVars, uf) : undefined
         function vnexttasks () {
           const ret: NextTask[] = []
-          const n = declTask.next
-          if (typeof n === 'string') ret.push({
-            task: vtaskuse(declTask, n), condition: ''
-          })
+          vnexttask(declTask.next)
           return ret
+          function vnexttask (n: decl.NextTask | decl.NextTask[]) {
+            if (typeof n === 'string') {
+              ret.push({
+                task: vtaskuse(declTask, n)
+              })
+            } else if (Array.isArray(n)) {
+              n.forEach(vnexttask)
+            } else {
+              if (Object.keys(n).length > 0) ret.push({
+                task: vtaskuse(n, n.task),
+                condition: vast(n, n.condition)
+              })
+            }
+          }
         }
       }
 
@@ -419,7 +436,9 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
             return true
           }
         })
-        if (!ret) fail(obj, 'invalid taskname: ' + taskname)
+        if (!ret) {
+          fail(obj, 'invalid taskname: ' + taskname)
+        }
         return ret
       }
 
@@ -611,6 +630,10 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
 
     async function vdocuments (documents: decl.Documents) {
       return null as any as Document[]
+    }
+
+    function vast (obj: any, source: string): Ast {
+      return source as any
     }
   }
 }

@@ -317,7 +317,9 @@ declare type IhwTaskaskAndShowName =
 
     declare interface IhwTOPTpartnome {
       base: BasicTypes
-      validate (val: string): string|false
+      validate? (val: string): string|false
+      format? (val: string): string
+      parse? (str: string): string
     }
     
 
