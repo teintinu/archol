@@ -37,6 +37,7 @@ export const quasarMongo: BuilderImpl = {
     }
 
     function saveAST<T> (lines: string[], ident: string, obj: T, prop: keyof T) {
+      debugger
       const ast: Ast = obj[prop] as any
       lines.push(ident + ast.func.getSourceFile())
     }

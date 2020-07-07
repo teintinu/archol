@@ -1,5 +1,5 @@
 import * as decl from './typesDecl'
-import { FunctionDeclaration } from 'ts-morph'
+import { FunctionDeclaration, MethodDeclaration } from 'ts-morph'
 import '@hoda5/extensions'
 
 export interface Application {
@@ -159,7 +159,7 @@ export interface BindField {
 }
 
 export interface Ast {
-  func: FunctionDeclaration
+  func: MethodDeclaration
 }
 
 export interface DefWorkspace extends Workspace {
@@ -419,10 +419,13 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
             } else if (Array.isArray(n)) {
               n.forEach(vnexttask)
             } else {
-              if (Object.keys(n).length > 0) ret.push({
-                task: vtaskuse(n, n.task),
-                condition: vast(n, n.condition)
-              })
+              for (const forkname of Object.keys(n)) {                
+                const cond=n[forkname]
+                ret.push({
+                  task: vtaskuse(n, forkname),
+                  condition: vast(n, cond)
+                })
+              }
             }
           }
         }
@@ -632,7 +635,7 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
       return null as any as Document[]
     }
 
-    function vast (obj: any, source: string): Ast {
+    function vast (obj: any, source: MethodDeclaration): Ast {
       return source as any
     }
   }

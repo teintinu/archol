@@ -1,3 +1,4 @@
+import { MethodDeclaration } from 'ts-morph'
 
 export interface Application {
   name: string
@@ -54,7 +55,7 @@ export interface Type {
   base: keyof typeof basicTypes
   validate (val: any): string | false
   format (val: any): string
-  parse (val: string): any  
+  parse (val: string): any
 }
 
 export type Fields = {
@@ -139,8 +140,7 @@ export type Tasks = {
 
 export type Task = UITask | SystemTask
 export type NextTask = string | {
-  task: string
-  condition: string
+  [task: string]: MethodDeclaration
 }
 
 export interface BaseTask {

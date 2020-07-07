@@ -5,8 +5,10 @@ import {
   NumericLiteral, StringLiteral, BooleanLiteral,
   ObjectLiteralExpression, ArrayLiteralExpression,
   PropertyAssignment,
-  PropertyAccessExpression
+  PropertyAccessExpression,
+  MethodDeclaration
 } from 'ts-morph';
+import { PropertyName } from 'typescript';
 
 export function loadWorkspace (ws: def.Workspace) {
 
@@ -111,20 +113,28 @@ export function loadWorkspace (ws: def.Workspace) {
       ret = {}
       for (const p of arg.getProperties()) {
         if (p instanceof PropertyAssignment) {
-          const nameNode = p.getNameNode()
-          const propName = nameNode instanceof StringLiteral ? nameNode.getLiteralValue() :
-            nameNode instanceof Identifier ? nameNode.getText() :
-              fail(p.getText() + ': nome de propriedade não tratado')
+          const propName = parsePropertyName(p.getNameNode())
           const propValue = p.getInitializer()
           ret[propName] = parseAnyArg(propValue)
         }
-        else fail(p.getText() + ': tipo de propriedade não tratado')
+        else if (p instanceof MethodDeclaration) {
+          const propName = parsePropertyName(p.getNameNode())
+          ret[propName] = p
+        } else fail(p.getText() + ': tipo de propriedade não tratado')
         // PropertyAssignment | ShorthandPropertyAssignment | SpreadAssignment | MethodDeclaration | AccessorDeclaration;
 
         //NoSubstitutionTemplateLiteral | TemplateExpression | BooleanLiteral |  StringLiteral | NumericLiteral | ObjectLiteralElementLike
         //arg.getLiteralValue()
       }
     } else fail(arg.getSourceFile().getFilePath() + ' ' + arg.getText() + ' string é esperada')
+    return ret
+  }
+
+  function parsePropertyName (nameNode: any) {
+    let ret: string = undefined as any
+    if (nameNode instanceof StringLiteral) ret = nameNode.getLiteralValue()
+    else if (nameNode instanceof Identifier) ret = nameNode.getText()
+    else fail(nameNode.getText() + ': nome de propriedade não tratado')
     return ret
   }
 
@@ -193,4 +203,5 @@ export function loadWorkspace (ws: def.Workspace) {
 
 function fail (...args: any[]): any {
   console.log(args)
+  throw new Error(args.map((a) => a.toString()).join(' '))
 }
