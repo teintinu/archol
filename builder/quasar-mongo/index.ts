@@ -1,4 +1,4 @@
-import { BuilderImpl, Package, I18N, Lang, Ast } from "../typesDef";
+import { BuilderImpl, Package, I18N, Lang, Ast, Field } from "../typesDef";
 import { join } from 'path'
 import { createSourceWriter, writeFile, SourcePartWriter } from '../sys';
 import { fail } from 'assert';
@@ -6,33 +6,21 @@ import { fail } from 'assert';
 export const quasarMongo: BuilderImpl = {
   async buildApp (ws, app, info) {
     const appDir = join(ws.rootDir, info.config.rootDir, '/src/components/archol')
-    const appIndex = createSourceWriter(appDir + '/index.ts')
-    const pkgnames: string[] = []
-    for (const pkg of app.packageList) {
-      appIndex.writeln('import * as ' + pkg.uri.id + ' from \'./' + pkg.uri.id + '\'')
-      const pkgIndex = createSourceWriter(appDir + '/' + pkg.uri.id + '/index.ts')
-      pkgnames.push(pkg.uri.id)
-      pkgIndex.writeln('import * as types from \'./types\'')
-      pkgIndex.writeln('import * as documents from \'./documents\'')
-      pkgIndex.writeln('import * as processes from \'./processes\'')
-      saveTypes(pkg)
-      saveDocs(pkg)
-      saveProcesses(pkg)
-      pkgIndex.writeln('export { types, documents, processes }')
-      pkgIndex.save()
-    }
+    const w = createSourceWriter(appDir + '/index.ts')
+    w.writeln('import { Type, Document, Process } from \'../archollib\'')
 
-    appIndex.writeln('export {' + app.packageList.map((p) => p.uri.id + '}'))
-    appIndex.save()
+    app.packageList.forEach(savePackage)
 
-    function saveI18N<T> (w: SourcePartWriter, obj: T, prop: keyof T, allowParams: boolean) {
+    w.save()
+
+    function saveI18N<T> (obj: T, prop: keyof T, allowParams: boolean) {
       if (allowParams) throw new Error('todo')
       const val: I18N = obj[prop]
       w.writeln(prop + ': {')
       w.ident()
       for (const lang of app.langs) save(lang)
-      w.writeln('},')
       w.identBack()
+      w.writeln('},')
       function save (lang: Lang) {
         const lval = val[lang]
         if (!lval) throw new Error('falta traducao')
@@ -40,7 +28,7 @@ export const quasarMongo: BuilderImpl = {
       }
     }
 
-    function saveAST<T> (w: SourcePartWriter, obj: T, prop: keyof T) {
+    function saveAST<T> (obj: T, prop: keyof T) {
       const ast: Ast = obj[prop] as any
       if (ast) {
         const m = ast.func
@@ -56,59 +44,76 @@ export const quasarMongo: BuilderImpl = {
       }
     }
 
-    function saveProcesses (pkg: Package) {
-      const w = createSourceWriter(appDir + '/' + pkg.uri.id + '/processes.ts')
-      w.writeln('import { Process } from \'../../archollib\'')
-      for (const p of pkg.processes) {
-        w.writeln('export const ' + p.name + ': Process = {')
-        w.ident()
-        w.writeln('pId: \'' + pkg.uri.full + '/' + p.name + '\',')
-        saveI18N(w, p, 'title', false)
-        saveI18N(w, p, 'caption', false)
-        w.writeln('icon: \'' + p.icon + '\',')
-        w.writeln('volatile: ' + (p.volatile ? 'true' : 'false') + ',')
-        w.identBack()
-        w.writeln('}')
-      }
-      w.writeln('')
-      w.writeln('export const allProcesses = [' + pkg.processes.map((p) => p.name).join(',') + ']')
-      w.save()
+    function vboolean (b: boolean) {
+      return b ? 'true' : 'false'
     }
 
-    function saveTypes (pkg: Package) {
-      const w = createSourceWriter(appDir + '/' + pkg.uri.id + '/types.ts')
-      w.writeln('import { Type } from \'../../archollib\'')
-      for (const t of pkg.types) {
-        w.writeln('export const ' + t.name + ': Type = {')
-        w.ident()
-        w.writeln('tId: \'' + pkg.uri.full + '/' + t.name + '\',')
-        w.writeln('base: \'' + t.base + '\',')
+    function savePackage (pkg: Package) {
+      saveTypes()
+      saveDocs()
+      saveProcesses()
 
-        saveAST(w, t, 'validate')
-        saveAST(w, t, 'format')
-        saveAST(w, t, 'parse')
-
-        w.identBack()
-        w.writeln('}')
+      function saveProcesses () {
+        for (const p of pkg.processes) {
+          w.writeln('export const ' + pkg.uri.id + '_p_' + p.name + ' = {')
+          w.ident()
+          w.writeln('pId: \'' + pkg.uri.full + '/' + p.name + '\',')
+          saveI18N(p, 'title', false)
+          saveI18N(p, 'caption', false)
+          w.writeln('icon: \'' + p.icon + '\',')
+          w.writeln('volatile: ' + (p.volatile ? 'true' : 'false') + ',')
+          w.identBack()
+          w.writeln('}')
+        }
+        w.writeln('')
+        w.writeln('export const allProcesses: Process[] = [' + pkg.processes.map((p) => pkg.uri.id + '_p_' + p.name).join(',') + ']')
+        w.save()
       }
-      w.writeln('')
-      w.writeln('export const allTypes = [' + pkg.types.map((t) => t.name).join(',') + ']')
-      w.save()
-    }
 
-    function saveDocs (pkg: Package) {
-      const w = createSourceWriter(appDir + '/' + pkg.uri.id + '/documents.ts')
-      w.writeln('import { Document } from \'../../archollib\'')
-      for (const d of pkg.documents) {
-        w.writeln('export const ' + d.name + ': Document = {')
-        w.ident()
-        w.writeln('dId: \'' + pkg.uri.full + '/' + d.name + '\',')
-        w.identBack()
-        w.writeln('}')
+      function saveTypes () {
+        for (const t of pkg.types) {
+          w.writeln('export const ' + pkg.uri.id + '_t_' + t.name + ' = {')
+          w.ident()
+          w.writeln('tId: \'' + pkg.uri.full + '/' + t.name + '\',')
+          w.writeln('base: \'' + t.base + '\',')
+
+          saveAST(t, 'validate')
+          saveAST(t, 'format')
+          saveAST(t, 'parse')
+
+          w.identBack()
+          w.writeln('}')
+        }
+        w.writeln('')
+        w.writeln('export const allTypes: Type[] = [' + pkg.types.map((t) => pkg.uri.id + '_t_' + t.name).join(',') + ']')
+        w.save()
       }
-      w.writeln('')
-      w.writeln('export const allDocuments = [' + pkg.documents.map((d) => d.name).join(',') + ']')
-      w.save()
+
+      function saveDocs () {
+        for (const d of pkg.documents) {
+          w.writeln('export const ' + pkg.uri.id + '_d_' + d.name + ' = {')
+          w.ident()
+          w.writeln('dId: \'' + pkg.uri.full + '/' + d.name + '\',')
+          w.writeln('volatile: ' + vboolean(d.persistence === 'session') + ',')
+          w.writeln('validation: {')
+          w.ident()
+          d.primaryFields.forEach(validateField)
+          w.identBack()
+          w.writeln('}')
+          w.identBack()
+          w.writeln('}')
+        }
+        w.writeln('')
+        w.writeln('export const allDocuments: Document[] = [' + pkg.documents.map((d) => pkg.uri.id + '_d_' + d.name).join(',') + ']')
+        w.save()
+      }
+
+      function validateField (f: Field) {
+        if (f.type.validate)
+          w.writeln(f.name + ': (val:any) => ' + pkg.uri.id + '_t_' + f.type.name + '.validate(val),')
+        else
+          w.writeln(f.name + ': false')
+      }
     }
   }
 }

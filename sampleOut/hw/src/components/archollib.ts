@@ -18,6 +18,9 @@ export interface Process {
 export interface Document {
   dId: string,
   volatile: boolean,
+  validation: {
+    [field: string]: (val: any) => false | string
+  }
 }
 
 export type I18N = {
