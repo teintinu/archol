@@ -214,9 +214,9 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
 
   const defLang = declApp.langs[0]
   const appLangs = declApp.langs
+  const appPackageList: Package[] = []
   const appUses = await vusePackages(declApp.uses);
   const appPackages: { [uri in PackageURI]: Package } = {} as any
-  const appPackageList: Package[] = []
   await Promise.all(Object.keys(pPackages).map(async (pkguri) => {
     const pkg = await pPackages[(pkguri as decl.PackageURI)]()
     appPackages[(pkguri as PackageURI)] = pkg

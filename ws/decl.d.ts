@@ -1,3 +1,4 @@
+/* eslint-disable */
 
 
   declare type Icon = string
@@ -51,11 +52,7 @@
 
   declare type FunctionLevel = 'cpu' | 'io'| 'proc'
 
-  declare interface Builders {
-    "quasar-mongo": BuilderConfig
-  }
-  
-
+  declare interface Builders {"quasar-mongo": BuilderConfig}
 
   declare function declarePackage (ns: 'test.archol.com', path: 'hw'): Itest_archol_com_hwUses
   declare interface Itest_archol_com_hwUses {

@@ -1,6 +1,7 @@
 import { Package, basicTypes, View, Widget } from '../typesDecl';
+import { SourcePartWriter } from '../sys';
 
-export async function genpkg (pkg: Package) {
+export async function genpkg (w: SourcePartWriter, pkg: Package) {
 
   let procCount = 0
 
@@ -325,7 +326,7 @@ ${docStateDecl}
     }
     lines.push(`}`)
   }
-  return lines
+  w.writelines(lines)
 
   function basetype (typename: string): string {
     if ((basicTypes as any)[typename]) return typename

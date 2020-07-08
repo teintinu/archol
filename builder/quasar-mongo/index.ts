@@ -1,100 +1,102 @@
 import { BuilderImpl, Package, I18N, Lang, Ast } from "../typesDef";
 import { join } from 'path'
-import { writeLines } from '../sys';
+import { createSourceWriter, writeFile, SourcePartWriter } from '../sys';
+import { fail } from 'assert';
 
 export const quasarMongo: BuilderImpl = {
   async buildApp (ws, app, info) {
     const appDir = join(ws.rootDir, info.config.rootDir, '/src/components/archol')
-    const indexlines: string[] = []
+    const appIndex = createSourceWriter(appDir + '/index.ts')
     const pkgnames: string[] = []
     for (const pkg of app.packageList) {
+      appIndex.writeln('import * as ' + pkg.uri.id + ' from \'./' + pkg.uri.id + '\'')
+      const pkgIndex = createSourceWriter(appDir + '/' + pkg.uri.id + '/index.ts')
       pkgnames.push(pkg.uri.id)
-      indexlines.push('import * as types from \'./' + pkg.uri.id + '/types\'')
-      indexlines.push('import * as documents from \'./' + pkg.uri.id + '/documents\'')
-      indexlines.push('import * as processes from \'./' + pkg.uri.id + '/processes\'')
+      pkgIndex.writeln('import * as types from \'./types\'')
+      pkgIndex.writeln('import * as documents from \'./documents\'')
+      pkgIndex.writeln('import * as processes from \'./processes\'')
       saveTypes(pkg)
       saveDocs(pkg)
       saveProcesses(pkg)
-    }
-    saveAppIndex()
-    function saveAppIndex () {
-      indexlines.push('export {types, documents, processes}')
-      writeLines(appDir + '/index.ts', indexlines)
+      pkgIndex.save()
     }
 
-    function saveI18N<T> (lines: string[], ident: string, obj: T, prop: keyof T, allowParams: boolean) {
+    appIndex.writeln('export {' + app.packageList.map((p) => p.uri.id + '}'))
+    appIndex.save()
+
+    function saveI18N<T> (w: SourcePartWriter, obj: T, prop: keyof T, allowParams: boolean) {
       if (allowParams) throw new Error('todo')
       const val: I18N = obj[prop]
-      lines.push(ident + prop + ': {')
+      w.writeln(prop + ': {')
+      w.ident()
       for (const lang of app.langs) save(lang)
-      lines.push(ident + '},')
+      w.writeln('},')
+      w.identBack()
       function save (lang: Lang) {
         const lval = val[lang]
         if (!lval) throw new Error('falta traducao')
-        lines.push(ident + '  ' + lang + ': () => \'' + lval.msg + '\',')
+        w.writeln(lang + ': () => \'' + lval.msg + '\',')
       }
     }
 
-    function saveAST<T> (lines: string[], ident: string, obj: T, prop: keyof T) {
+    function saveAST<T> (w: SourcePartWriter, obj: T, prop: keyof T) {
       const ast: Ast = obj[prop] as any
       if (ast) {
         const m = ast.func
         const params = m.getParameters().map((p) => p.getName() + ':' + p.getType().getText())
-        lines.push(ident + m.getName() + '(' + params.join(',') + ') {' + m.getBodyText() + '}')
+        const code = m.getBodyText()
+        if (code) {
+          w.writeln(m.getName() + '(' + params.join(',') + ') {');
+          w.ident()
+          w.writeln(code)
+          w.identBack()
+          w.writeln('}')
+        } else fail('AST inválido')
       }
     }
 
     function saveProcesses (pkg: Package) {
-      const lines: string[] = ['import { Process } from \'../../archollib\'']
+      const w = createSourceWriter(appDir + '/' + pkg.uri.id + '/processes.ts')
+      w.writeln('import { Process } from \'../../archollib\'')
       for (const p of pkg.processes) {
-        lines.push(
-          'export const ' + p.name + ': Process = {',
-          '  pid: \'' + pkg.uri.id + '.' + p.name + '\',',
-        )
-        saveI18N(lines, '  ', p, 'title', false)
-        saveI18N(lines, '  ', p, 'caption', false)
-        lines.push('  icon: \'' + p.icon + '\',')
-        lines.push('  volatile: ' + (p.volatile ? 'true' : 'false') + ',')
-        lines.push('}')
+        w.writeln('export const ' + p.name + ': Process = {')
+        w.ident()
+        w.writeln('pid: \'' + pkg.uri.id + '.' + p.name + '\',')
+        saveI18N(w, p, 'title', false)
+        saveI18N(w, p, 'caption', false)
+        w.writeln('icon: \'' + p.icon + '\',')
+        w.writeln('volatile: ' + (p.volatile ? 'true' : 'false') + ',')
+        w.identBack()
+        w.writeln('}')
       }
-      lines.push('')
-      lines.push('export const allProcesses = [' + pkg.processes.map((p) => p.name).join(',') + ']')
-      writeLines(appDir + '/' + pkg.uri.id + '/processes.ts', lines)
+      w.writeln('')
+      w.writeln('export const allProcesses = [' + pkg.processes.map((p) => p.name).join(',') + ']')
+      w.save()
     }
 
     function saveTypes (pkg: Package) {
-      const lines: string[] = ['import { Type } from \'../../archollib\'']
+      const w = createSourceWriter(appDir + '/' + pkg.uri.id + '/types.ts')
+      w.writeln('import { Type } from \'../../archollib\'')
       for (const t of pkg.types) {
-        lines.push(
-          'export const ' + t.name + ': Type = {',
-          '  tid: \'' + pkg.uri.id + '.' + t.name + '\',',
-          '  base: \'' + t.base + '\',',
-        )
+        w.writeln('export const ' + t.name + ': Type = {')
+        w.ident()
+        w.writeln('tid: \'' + pkg.uri.id + '.' + t.name + '\',')
+        w.writeln('base: \'' + t.base + '\',')
 
-        saveAST(lines, '  ', t, 'validate')
-        saveAST(lines, '  ', t, 'format')
-        saveAST(lines, '  ', t, 'parse')
+        saveAST(w, t, 'validate')
+        saveAST(w, t, 'format')
+        saveAST(w, t, 'parse')
 
-        lines.push('}')
+        w.identBack()
+        w.writeln('}')
       }
-      lines.push('')
-      lines.push('export const allTypes = [' + pkg.types.map((p) => p.name).join(',') + ']')
-      writeLines(appDir + '/' + pkg.uri.id + '/types.ts', lines)
+      w.writeln('')
+      w.writeln('export const allTypes = [' + pkg.types.map((p) => p.name).join(',') + ']')
+      w.save()
     }
 
     function saveDocs (pkg: Package) {
       return
-      const lines: string[] = ['import { Document } from \'../../archollib\'']
-      for (const d of pkg.documents) {
-        lines.push(
-          'export const ' + d.name + ': Process = {',
-          '  did: \'' + pkg.uri.id + '.' + d.name + '\',',
-        )
-        lines.push('}')
-      }
-      lines.push('')
-      lines.push('export const processes = [' + pkg.processes.map((p) => p.name).join(',') + ']')
-      writeLines(appDir + '/' + pkg.uri.id + '/docs.ts', lines)
     }
   }
 }

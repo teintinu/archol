@@ -1,7 +1,8 @@
 import { basicTypes } from '../typesDecl';
+import { SourcePartWriter } from '../sys';
 
-export async function genapp (packageUrls: string, builders: string) {
-  return `
+export async function genapp (w: SourcePartWriter, packageUrls: string, builders: string) {
+  w.write(`
 
   declare type Icon = string
 
@@ -54,8 +55,7 @@ export async function genapp (packageUrls: string, builders: string) {
 
   declare type FunctionLevel = 'cpu' | 'io'| 'proc'
 
-  declare interface Builders {
-    ${builders}
-  }
-  `.split('\n')
+  declare interface Builders {`,
+    builders
+  ,`}`)
 }
