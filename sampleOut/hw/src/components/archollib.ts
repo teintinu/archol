@@ -2,17 +2,21 @@ import { reactive } from "@vue/composition-api"
 import { navigate } from "src/router"
 
 export interface Type {
-  tid: string,
+  tId: string,
   base: string,
   validate?(val: any): false | string
   format?(val: any): string
   parse?(txt: string): any
 }
 export interface Process {
-  pid: string,
+  pId: string,
   title: I18N,
   caption: I18N,
   icon: string,
+  volatile: boolean,
+}
+export interface Document {
+  dId: string,
   volatile: boolean,
 }
 
@@ -43,7 +47,7 @@ export function newInstance (process: Process) {
       def: process,
       vars: reactive({})
     }
-    navigate('/p/' + process.pid + '/' + s)
+    navigate('/p/' + process.pId + '/' + s)
   }
 }
 

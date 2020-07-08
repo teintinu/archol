@@ -18,6 +18,7 @@ export const quasarMongo: BuilderImpl = {
       saveTypes(pkg)
       saveDocs(pkg)
       saveProcesses(pkg)
+      pkgIndex.writeln('export { types, documents, processes }')
       pkgIndex.save()
     }
 
@@ -61,7 +62,7 @@ export const quasarMongo: BuilderImpl = {
       for (const p of pkg.processes) {
         w.writeln('export const ' + p.name + ': Process = {')
         w.ident()
-        w.writeln('pid: \'' + pkg.uri.id + '.' + p.name + '\',')
+        w.writeln('pId: \'' + pkg.uri.full + '/' + p.name + '\',')
         saveI18N(w, p, 'title', false)
         saveI18N(w, p, 'caption', false)
         w.writeln('icon: \'' + p.icon + '\',')
@@ -80,7 +81,7 @@ export const quasarMongo: BuilderImpl = {
       for (const t of pkg.types) {
         w.writeln('export const ' + t.name + ': Type = {')
         w.ident()
-        w.writeln('tid: \'' + pkg.uri.id + '.' + t.name + '\',')
+        w.writeln('tId: \'' + pkg.uri.full + '/' + t.name + '\',')
         w.writeln('base: \'' + t.base + '\',')
 
         saveAST(w, t, 'validate')
@@ -91,12 +92,23 @@ export const quasarMongo: BuilderImpl = {
         w.writeln('}')
       }
       w.writeln('')
-      w.writeln('export const allTypes = [' + pkg.types.map((p) => p.name).join(',') + ']')
+      w.writeln('export const allTypes = [' + pkg.types.map((t) => t.name).join(',') + ']')
       w.save()
     }
 
     function saveDocs (pkg: Package) {
-      return
+      const w = createSourceWriter(appDir + '/' + pkg.uri.id + '/documents.ts')
+      w.writeln('import { Document } from \'../../archollib\'')
+      for (const d of pkg.documents) {
+        w.writeln('export const ' + d.name + ': Document = {')
+        w.ident()
+        w.writeln('dId: \'' + pkg.uri.full + '/' + d.name + '\',')
+        w.identBack()
+        w.writeln('}')
+      }
+      w.writeln('')
+      w.writeln('export const allDocuments = [' + pkg.documents.map((d) => d.name).join(',') + ']')
+      w.save()
     }
   }
 }

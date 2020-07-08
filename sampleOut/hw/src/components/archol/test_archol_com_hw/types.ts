@@ -1,6 +1,6 @@
 import { Type } from '../../archollib'
 export const partnome: Type = {
-  tid: 'test_archol_com_hw.partnome',
+  tId: 'test.archol.com/hw/partnome',
   base: 'string',
   validate(val:string) {
     if(! /^\w+/g.test(val)) return 'parte de nome inválida'

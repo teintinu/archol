@@ -5,17 +5,17 @@ export async function genpkg (w: SourcePartWriter, pkg: Package) {
 
   let procCount = 0
 
-  const processesNames = Object.keys(pkg.processes||{})
+  const processesNames = Object.keys(pkg.processes || {})
   const processesDecl = processesNames.map((procname) => {
     return `      ${procname}: I${pkg.uri.id}Process${procname},`
   }).join('\n')
 
-  const functionsNames = Object.keys(pkg.functions||{})
+  const functionsNames = Object.keys(pkg.functions || {})
   const functionsDecl = functionsNames.map((funcname) => {
     return `      ${funcname}: I${pkg.uri.id}OPT${funcname},`
   }).join('\n')
 
-  const viewsnames = Object.keys(pkg.views||{})
+  const viewsnames = Object.keys(pkg.views || {})
   const pkgviewnames = viewsnames.map((v) => {
     return '"' + v + '"'
   }).join('|')
@@ -23,8 +23,8 @@ export async function genpkg (w: SourcePartWriter, pkg: Package) {
     return `      ${viewname}: I${pkg.uri.id}VOPT${viewname},`
   }).join('\n')
 
-  const typesnames = Object.keys(pkg.types||{})
-  const basictypesnames = Object.keys(basicTypes||{})
+  const typesnames = Object.keys(pkg.types || {})
+  const basictypesnames = Object.keys(basicTypes || {})
   const typesDecl = typesnames.map((typename) => {
     return `      ${typename}: I${pkg.uri.id}TOPT${typename},`
   }).join('\n')
@@ -32,12 +32,12 @@ export async function genpkg (w: SourcePartWriter, pkg: Package) {
     return `'${typename}'`
   }).join('|')
 
-  const docsnames = Object.keys(pkg.documents||{})
+  const docsnames = Object.keys(pkg.documents || {})
   const docsDecl = docsnames.map((docname) => {
     return `      ${docname}: I${pkg.uri.id}DOPT${docname},`
   }).join('\n')
 
-  const rolesnames = Object.keys(pkg.roles||{})
+  const rolesnames = Object.keys(pkg.roles || {})
   const rolesDecl = rolesnames.map((r) => {
     return '"' + r + '"'
   }).join('|')
@@ -102,13 +102,13 @@ ${docsDecl}
   for (const procname of processesNames) {
     procCount++
     const proc = pkg.processes[procname]
-    const inputNames = Object.keys(proc.vars?.input||{});
+    const inputNames = Object.keys(proc.vars?.input || {});
     const scopeInput = inputNames
       .map((n) => `      ${n}: ${basetype(proc.vars.input[n].type)}`)
-    const outputNames = Object.keys(proc.vars?.output||{});
+    const outputNames = Object.keys(proc.vars?.output || {});
     const scopeOutput = outputNames
       .map((n) => `      ${n}: ${basetype(proc.vars.output[n].type)}`)
-    const localNames = Object.keys(proc.vars?.local||{});
+    const localNames = Object.keys(proc.vars?.local || {});
     const scopeLocal = localNames
       .map((n) => `      ${n}: ${basetype(proc.vars.local[n].type)}`)
 
@@ -117,7 +117,7 @@ ${docsDecl}
       .concat(localNames.map((l) => '"local.' + l + '"'))
       .join('|')
 
-    const tasksnames = Object.keys(proc.tasks||{})
+    const tasksnames = Object.keys(proc.tasks || {})
     const procTaskNames = tasksnames.map((t) => '"' + t + '"').join('|')
 
     lines = lines.concat(`
@@ -172,11 +172,11 @@ ${scopeLocal}
     let itasklinespipe = false
     for (const funcname of functionsNames) {
       const func = pkg.functions[funcname]
-      const finputname = Object.keys(pkg.functions[funcname].input||{})
+      const finputname = Object.keys(pkg.functions[funcname].input || {})
       const finputUse = finputname.map((i) => `      ${i}: I${pkg.uri.id}ScopePath${procname}`).join('\n')
       const fscopeInput = finputname
         .map((n) => `      ${n}: ${basetype(func.input[n].type)}`)
-      const foutputname = Object.keys(pkg.functions[funcname].output||{})
+      const foutputname = Object.keys(pkg.functions[funcname].output || {})
       const foutputUse = foutputname.map((o) => `      ${o}: I${pkg.uri.id}ScopePath${procname}`).join('\n')
       const fscopeOutput = foutputname
         .map((n) => `      ${n}: ${basetype(func.output[n].type)}`)
@@ -283,11 +283,11 @@ ${viewfields.decl.join('\n')}
   }
 
   lines = lines.concat(`
-  declare type I${pkg.uri.id}ColFields = {
-    [fieldName: string]: I${pkg.uri.id}ColField
+  declare type I${pkg.uri.id}SomeFields = {
+    [fieldName: string]: I${pkg.uri.id}SomeField
   }
   
-  declare interface I${pkg.uri.id}ColField {
+  declare interface I${pkg.uri.id}SomeField {
     description: string
     type: I${pkg.uri.id}TypeName
   }`.split('\n'))
@@ -295,26 +295,28 @@ ${viewfields.decl.join('\n')}
   for (const docname of docsnames) {
     const doc = pkg.documents[docname]
 
-    const docstatesnames = Object.keys(doc.states||{})
+    const docstatesnames = Object.keys(doc.states || {})
     const docStateDecl = docstatesnames.map((s) => '        ' + s + ': DocState').join('\n')
-    const colfieldsnames = Object.keys(doc.collection||{})
-    const docactionsnames = Object.keys(doc.actions||{})
+    const pfieldsnames = Object.keys(doc.primaryFields || {})
+    const sfieldsnames = Object.keys(doc.secondaryFields || {})
+    const docactionsnames = Object.keys(doc.actions || {})
 
     lines = lines.concat(`
-    declare type I${pkg.uri.id}DOCOLNAME${docname} = ${colfieldsnames.map((f) => '"' + f + '"').join('|')}
+    declare type I${pkg.uri.id}DOCOLNAME${docname} = ${pfieldsnames.concat(sfieldsnames).map((f) => '"' + f + '"').join('|')}
     declare interface I${pkg.uri.id}DOPT${docname} {
       persistence: DocPersistence
       states: {
 ${docStateDecl}
       }
-      collection: I${pkg.uri.id}ColFields
+      primaryFields: I${pkg.uri.id}SomeFields
+      secondaryFields: I${pkg.uri.id}SomeFields
       indexes: {[name:string]:I${pkg.uri.id}DOCOLNAME${docname}[]}
       actions: I${pkg.uri.id}DOCACTIONS${docname}
     }
     `.split('\n'))
     lines.push(`    declare interface I${pkg.uri.id}DOCACTIONS${docname} {`)
     for (const docactionname of docactionsnames) {
-      lines=lines.concat(`
+      lines = lines.concat(`
         ${docactionname}: {
           from: 'newDoc'|${docstatesnames.map((s) => '"' + s + '"').join('|')},
           to: ${docstatesnames.map((s) => '"' + s + '"').join('|')},

@@ -1,6 +1,6 @@
 import { Process } from '../../archollib'
 export const askAndShowName: Process = {
-  pid: 'test_archol_com_hw.askAndShowName',
+  pId: 'test.archol.com/hw/askAndShowName',
   title: {
     pt: () => 'Olá mundo',
     },

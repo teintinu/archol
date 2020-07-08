@@ -97,9 +97,12 @@ export type Documents = {
 }
 
 export interface Document {
-  persistence: string
-  states: DocumentStates
-  collection: DocFields
+  identification: 'GUID'
+  primaryFields: DocFields
+  secondaryFields: DocFields
+  indexes: DocIndexes,
+  persistence: 'session' | 'persistent'
+  states: DocumentStates  
   actions: DocActions
 }
 
@@ -122,6 +125,10 @@ export type DocFields = {
 export interface DocField {
   description: I18N
   type: string
+}
+
+export type DocIndexes = {
+  [indexName: string]: string[]
 }
 
 export type DocumentStates = {
@@ -158,7 +165,7 @@ export type Tasks = {
 
 export type Task = UITask | SystemTask
 export type NextTask = string | {
-  [task: string]: MethodDeclaration
+  [task: string]: Ast
 }
 
 export interface BaseTask {

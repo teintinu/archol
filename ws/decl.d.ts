@@ -325,11 +325,11 @@ declare type Itest_archol_com_hwTaskaskAndShowName =
     }
     
 
-  declare type Itest_archol_com_hwColFields = {
-    [fieldName: string]: Itest_archol_com_hwColField
+  declare type Itest_archol_com_hwSomeFields = {
+    [fieldName: string]: Itest_archol_com_hwSomeField
   }
   
-  declare interface Itest_archol_com_hwColField {
+  declare interface Itest_archol_com_hwSomeField {
     description: string
     type: Itest_archol_com_hwTypeName
   }
@@ -341,7 +341,8 @@ declare type Itest_archol_com_hwTaskaskAndShowName =
         partial: DocState
         complete: DocState
       }
-      collection: Itest_archol_com_hwColFields
+      primaryFields: Itest_archol_com_hwSomeFields
+      secondaryFields: Itest_archol_com_hwSomeFields
       indexes: {[name:string]:Itest_archol_com_hwDOCOLNAMEnomes[]}
       actions: Itest_archol_com_hwDOCACTIONSnomes
     }

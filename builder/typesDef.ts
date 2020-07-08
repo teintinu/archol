@@ -76,17 +76,39 @@ export interface Field {
   type: Type
 }
 
-export interface Index {
-  name: string
-  fields: {
-    field: string,
-    flag?: 'desc' | 'text'
-  }[]
+export interface DocumentState {
+  icon: Icon
+  description: I18N
+}
+
+export interface DocumentAction {
+  from: string
+  to: string
+  icon: Icon
+  description: I18N
+  run: Ast | false
 }
 
 export interface Document {
   name: string
-  data: Field[]
+  identification: 'GUID'
+  primaryFields: Field[]
+  secondaryFields: Field[]
+  indexes: DocIndex[]
+  persistence: 'session' | 'persistent'
+  states: DocumentState[]
+  actions: DocumentAction[]
+}
+
+export type DocIndexFlag = 'asc' | 'desc' | 'text'
+export interface DocIndexField {
+  field: Field
+  flag: DocIndexFlag
+}
+
+export interface DocIndex {
+  name: string
+  fields: DocIndexField[]
 }
 
 export interface Process {
@@ -490,7 +512,7 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     }
 
     async function vfields (vars: decl.Fields) {
-      const names = Object.keys(vars)
+      const names = Object.keys(vars || [])
       return Promise.all(names.map(async (n) => {
         const field = await vfield(n, vars[n])
         return field
@@ -664,10 +686,75 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     }
 
     async function vdocuments (documents: decl.Documents) {
-      return null as any as Document[]
+      const docnames = Object.keys(documents)
+      return await Promise.all(docnames.map(async (dn) => {
+        const d = documents[dn]
+        const primaryFields = await vfields(d.primaryFields)
+        const secondaryFields = await vfields(d.secondaryFields)
+        const ret: Document = {
+          name: dn,
+          identification: d.identification,
+          primaryFields,
+          secondaryFields,
+          persistence: d.persistence,
+          states: await vdocstates(d.states),
+          actions: await vdocactions(d.actions),
+          indexes: await vdocindexes(d.indexes, primaryFields, secondaryFields),
+        }
+        return ret
+      }))
     }
 
-    function vast (obj: any, source: MethodDeclaration): Ast {
+    async function vdocstates (documentStates: decl.DocumentStates) {
+      const statenames = Object.keys(documentStates)
+      return await Promise.all(statenames.map(async (sn) => {
+        const s = documentStates[sn]
+        const ret: DocumentState = {
+          icon: vicon(s, 'icon'),
+          description: vi18n(s, "description")
+        }
+        return ret
+      }))
+    }
+
+    async function vdocactions (documentActions: decl.DocActions) {
+      const actionnames = Object.keys(documentActions)
+      return await Promise.all(actionnames.map(async (an) => {
+        const a = documentActions[an]
+        const ret: DocumentAction = {
+          from: a.from,
+          to: a.to,
+          icon: vicon(a, 'icon'),
+          description: vi18n(a, "description"),
+          run: vast(a, a.run)
+        }
+        return ret
+      }))
+    }
+
+    async function vdocindexes (documentIndexes: decl.DocIndexes, primaryFields: Field[], secondaryFields: Field[]) {
+      const indexnames = Object.keys(documentIndexes)
+      return await Promise.all(indexnames.map(async (idxn) => {
+        const i = documentIndexes[idxn]
+        const fields = await Promise.all(i.map(async (idxf) => {
+          const flag: DocIndexFlag = idxn === 'text' ? 'text' : 'asc'
+          let field = await vfindfield(primaryFields, idxf)
+          if (!field) field = await vfindfield(secondaryFields, idxf)
+          const fret: DocIndexField = {
+            field,
+            flag
+          }
+          return fret
+        }))
+        const iret: DocIndex = {
+          name: idxn,
+          fields
+        }
+        return iret
+      }))
+    }
+
+    function vast (obj: any, source: false | decl.Ast): Ast {
       return source as any
     }
   }

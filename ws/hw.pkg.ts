@@ -197,7 +197,7 @@ declarePackage('test.archol.com', 'hw')
           icon: 'complete',
         }
       },
-      collection: {
+      primaryFields: {
         fname: {
           description: 'Primeiro nome',
           type: 'partnome'
@@ -207,6 +207,7 @@ declarePackage('test.archol.com', 'hw')
           type: 'partnome'
         },
       },
+      secondaryFields: {},
       indexes: {
         text: ['fname', 'lname'],
         porUltimoNome: ['lname']
