@@ -27,7 +27,7 @@ export async function genapp (packageUrls: string, builders: string) {
   declare function declareApp (name: string, opts: {
     description: I18N,
     icon: Icon,
-    uses: PackageUrls[],
+    uses: PackageUses,
     langs: Lang[],
     builders: Builders
   }): void
@@ -37,8 +37,13 @@ export async function genapp (packageUrls: string, builders: string) {
     icon?: Icon,
     run: "next" | ((data: T) => Promise<void>)
   }  
-  declare type PackageUrls = ${packageUrls}
-      
+
+  declare type PackageUses = {
+    [alias: string]: PackageUrls
+  }
+  
+  declare type PackageUrls = ${packageUrls}     
+
   declare type BasicTypes = ${Object.keys(basicTypes||{}).map((b) => '"' + b + '"').join('|')}
 
   declare type DocPersistence = 'session' | 'persistent'

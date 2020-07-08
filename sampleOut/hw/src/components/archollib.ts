@@ -1,6 +1,13 @@
 import { reactive } from "@vue/composition-api"
 import { navigate } from "src/router"
 
+export interface Type {
+  tid: string,
+  base: string,
+  validate?(val: any): false | string
+  format?(val: any): string
+  parse?(txt: string): any
+}
 export interface Process {
   pid: string,
   title: I18N,

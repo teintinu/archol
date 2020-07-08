@@ -1,5 +1,5 @@
-declarePackage('hw')
-  .uses([])
+declarePackage('test.archol.com', 'hw')
+  .uses({})
   .roles({
     public: {
       description: 'Todos usuários',

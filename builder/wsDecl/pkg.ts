@@ -6,12 +6,12 @@ export async function genpkg (pkg: Package) {
 
   const processesNames = Object.keys(pkg.processes||{})
   const processesDecl = processesNames.map((procname) => {
-    return `      ${procname}: I${pkg.name}Process${procname},`
+    return `      ${procname}: I${pkg.uri.id}Process${procname},`
   }).join('\n')
 
   const functionsNames = Object.keys(pkg.functions||{})
   const functionsDecl = functionsNames.map((funcname) => {
-    return `      ${funcname}: I${pkg.name}OPT${funcname},`
+    return `      ${funcname}: I${pkg.uri.id}OPT${funcname},`
   }).join('\n')
 
   const viewsnames = Object.keys(pkg.views||{})
@@ -19,13 +19,13 @@ export async function genpkg (pkg: Package) {
     return '"' + v + '"'
   }).join('|')
   const viewsDecl = viewsnames.map((viewname) => {
-    return `      ${viewname}: I${pkg.name}VOPT${viewname},`
+    return `      ${viewname}: I${pkg.uri.id}VOPT${viewname},`
   }).join('\n')
 
   const typesnames = Object.keys(pkg.types||{})
   const basictypesnames = Object.keys(basicTypes||{})
   const typesDecl = typesnames.map((typename) => {
-    return `      ${typename}: I${pkg.name}TOPT${typename},`
+    return `      ${typename}: I${pkg.uri.id}TOPT${typename},`
   }).join('\n')
   const pkgtypenames = basictypesnames.concat(typesnames).map((typename) => {
     return `'${typename}'`
@@ -33,7 +33,7 @@ export async function genpkg (pkg: Package) {
 
   const docsnames = Object.keys(pkg.documents||{})
   const docsDecl = docsnames.map((docname) => {
-    return `      ${docname}: I${pkg.name}DOPT${docname},`
+    return `      ${docname}: I${pkg.uri.id}DOPT${docname},`
   }).join('\n')
 
   const rolesnames = Object.keys(pkg.roles||{})
@@ -43,55 +43,55 @@ export async function genpkg (pkg: Package) {
 
   let lines: string[] = `
 
-  declare function declarePackage (name: '${pkg.name}'): I${pkg.name}Uses
-  declare interface I${pkg.name}Uses {
-    uses (packages: PackageUrls[]): I${pkg.name}Roles
+  declare function declarePackage (ns: '${pkg.uri.ns}', path: '${pkg.uri.path}'): I${pkg.uri.id}Uses
+  declare interface I${pkg.uri.id}Uses {
+    uses (packages: PackageUses): I${pkg.uri.id}Roles
   }
   
-  declare interface I${pkg.name}Roles {
-    roles (roles: Roles): I${pkg.name}Processes
+  declare interface I${pkg.uri.id}Roles {
+    roles (roles: Roles): I${pkg.uri.id}Processes
   }
   
-  declare type I${pkg.name}Role = ${rolesDecl}
-  declare type I${pkg.name}UseRoles = I${pkg.name}Role[]
+  declare type I${pkg.uri.id}Role = ${rolesDecl}
+  declare type I${pkg.uri.id}UseRoles = I${pkg.uri.id}Role[]
 
-  declare type I${pkg.name}Processes = {
+  declare type I${pkg.uri.id}Processes = {
     processes (processes: {
 ${processesDecl}
-    }): I${pkg.name}Functions
+    }): I${pkg.uri.id}Functions
   }
 
-  declare type I${pkg.name}ViewNames = ${pkgviewnames}
+  declare type I${pkg.uri.id}ViewNames = ${pkgviewnames}
 
-  declare type I${pkg.name}Fields = {
-    [fieldName: string]: I${pkg.name}Field
+  declare type I${pkg.uri.id}Fields = {
+    [fieldName: string]: I${pkg.uri.id}Field
   }
   
-  declare interface I${pkg.name}Field {
-    type: I${pkg.name}TypeName
+  declare interface I${pkg.uri.id}Field {
+    type: I${pkg.uri.id}TypeName
   }
   
-  declare type I${pkg.name}TypeName = ${pkgtypenames}
+  declare type I${pkg.uri.id}TypeName = ${pkgtypenames}
   
-  declare interface I${pkg.name}Functions {
+  declare interface I${pkg.uri.id}Functions {
     functions (functions: {
 ${functionsDecl}
-    }): I${pkg.name}Views
+    }): I${pkg.uri.id}Views
   }
 
-  declare interface I${pkg.name}Views {
+  declare interface I${pkg.uri.id}Views {
     views (views: {
 ${viewsDecl}      
-    }): I${pkg.name}Types
+    }): I${pkg.uri.id}Types
   }
 
-  declare interface I${pkg.name}Types {
+  declare interface I${pkg.uri.id}Types {
     types (types: {
 ${typesDecl}      
-    }): I${pkg.name}Docs
+    }): I${pkg.uri.id}Docs
   }
 
-  declare interface I${pkg.name}Docs {
+  declare interface I${pkg.uri.id}Docs {
     documents (documents: {
 ${docsDecl}      
     }): void
@@ -120,24 +120,24 @@ ${docsDecl}
     const procTaskNames = tasksnames.map((t) => '"' + t + '"').join('|')
 
     lines = lines.concat(`
-  declare interface I${pkg.name}Process${procname} {
+  declare interface I${pkg.uri.id}Process${procname} {
     title: I18N,
     caption: I18N,
     icon: Icon,
-    start: I${pkg.name}TaskName${procname},
+    start: I${pkg.uri.id}TaskName${procname},
     volatile: true,
-    roles: I${pkg.name}UseRoles[],
-    vars: I${pkg.name}Vars${procname}
-    tasks: I${pkg.name}Tasks${procname},
+    roles: I${pkg.uri.id}UseRoles[],
+    vars: I${pkg.uri.id}Vars${procname}
+    tasks: I${pkg.uri.id}Tasks${procname},
   }
     
-  declare interface I${pkg.name}Vars${procname} {
-    input: I${pkg.name}Fields
-    output: I${pkg.name}Fields
-    local: I${pkg.name}Fields
+  declare interface I${pkg.uri.id}Vars${procname} {
+    input: I${pkg.uri.id}Fields
+    output: I${pkg.uri.id}Fields
+    local: I${pkg.uri.id}Fields
   }
   
-  declare interface I${pkg.name}Scope${procname} {
+  declare interface I${pkg.uri.id}Scope${procname} {
     input: {
 ${scopeInput}
     }
@@ -149,34 +149,34 @@ ${scopeLocal}
     }
   }
   
-  declare type I${pkg.name}ScopePath${procname} = ${scopePaths}      
+  declare type I${pkg.uri.id}ScopePath${procname} = ${scopePaths}      
   
-  declare type I${pkg.name}TaskName${procname} = ${procTaskNames}
+  declare type I${pkg.uri.id}TaskName${procname} = ${procTaskNames}
   
-  declare type I${pkg.name}Tasks${procname} = {
-    [taskName: string]: I${pkg.name}Task${procname}
+  declare type I${pkg.uri.id}Tasks${procname} = {
+    [taskName: string]: I${pkg.uri.id}Task${procname}
   }
   
-  declare type I${pkg.name}NextTask${procname} = I${pkg.name}TaskName${procname} | {
-    [task in I${pkg.name}TaskName${procname}]?: (vars: I${pkg.name}Scope${procname}) => boolean
+  declare type I${pkg.uri.id}NextTask${procname} = I${pkg.uri.id}TaskName${procname} | {
+    [task in I${pkg.uri.id}TaskName${procname}]?: (vars: I${pkg.uri.id}Scope${procname}) => boolean
   }
 
-  declare type I${pkg.name}UseFunction${procname} = {
+  declare type I${pkg.uri.id}UseFunction${procname} = {
 
 `.split('\n'))
 
     let firsttask = true
     let flines: string[] = []
-    let itasklines: string[] = [`declare type I${pkg.name}Task${procname} =`]
+    let itasklines: string[] = [`declare type I${pkg.uri.id}Task${procname} =`]
     let itasklinespipe = false
     for (const funcname of functionsNames) {
       const func = pkg.functions[funcname]
       const finputname = Object.keys(pkg.functions[funcname].input||{})
-      const finputUse = finputname.map((i) => `      ${i}: I${pkg.name}ScopePath${procname}`).join('\n')
+      const finputUse = finputname.map((i) => `      ${i}: I${pkg.uri.id}ScopePath${procname}`).join('\n')
       const fscopeInput = finputname
         .map((n) => `      ${n}: ${basetype(func.input[n].type)}`)
       const foutputname = Object.keys(pkg.functions[funcname].output||{})
-      const foutputUse = foutputname.map((o) => `      ${o}: I${pkg.name}ScopePath${procname}`).join('\n')
+      const foutputUse = foutputname.map((o) => `      ${o}: I${pkg.uri.id}ScopePath${procname}`).join('\n')
       const fscopeOutput = foutputname
         .map((n) => `      ${n}: ${basetype(func.output[n].type)}`)
 
@@ -184,8 +184,8 @@ ${scopeLocal}
       else lines.push('  } | {')
 
       itasklines = itasklines.concat(` ${itasklinespipe ? '|' : ''} {
-        useFunction: I${pkg.name}UseFunction${procname},
-        next: I${pkg.name}NextTask${procname},
+        useFunction: I${pkg.uri.id}UseFunction${procname},
+        next: I${pkg.uri.id}NextTask${procname},
       }`.split('\n'))
       itasklinespipe = true
 
@@ -199,18 +199,18 @@ ${finputUse}
     }
     `.split('\n'))
       if (procCount === 1) flines = flines.concat(`
-    declare interface I${pkg.name}OPT${funcname} {
+    declare interface I${pkg.uri.id}OPT${funcname} {
       level: FunctionLevel
-      input: I${pkg.name}Fields,
-      output: I${pkg.name}Fields,
-      code (vars: { input: I${pkg.name}INPUT${funcname}, output: I${pkg.name}OUTPUT${funcname} }): void
+      input: I${pkg.uri.id}Fields,
+      output: I${pkg.uri.id}Fields,
+      code (vars: { input: I${pkg.uri.id}INPUT${funcname}, output: I${pkg.uri.id}OUTPUT${funcname} }): void
     }
     
-    declare interface I${pkg.name}INPUT${funcname} {
+    declare interface I${pkg.uri.id}INPUT${funcname} {
 ${fscopeInput}
     }
     
-    declare interface I${pkg.name}OUTPUT${funcname} {
+    declare interface I${pkg.uri.id}OUTPUT${funcname} {
 ${fscopeOutput}
     }`.split('\n'))
 
@@ -224,10 +224,10 @@ ${fscopeOutput}
         ${itasklinespipe ? '|' : ''} {
           useView: {
             view: '${viewname}'
-            bind: I${pkg.name}VBIND${viewname}<I${pkg.name}ScopePath${procname}>
+            bind: I${pkg.uri.id}VBIND${viewname}<I${pkg.uri.id}ScopePath${procname}>
           },
-          next: I${pkg.name}NextTask${procname},
-          roles: I${pkg.name}UseRoles
+          next: I${pkg.uri.id}NextTask${procname},
+          roles: I${pkg.uri.id}UseRoles
         }
       `.split('\n'))
       itasklinespipe = true
@@ -242,25 +242,25 @@ ${fscopeOutput}
         }, { decl: [], bind: [] })
         lines = lines.concat(`   
   
-      declare interface I${pkg.name}VOPT${viewname} {
-        content: I${pkg.name}VCONTENT${viewname}
-        primaryAction?: IAction<I${pkg.name}VDATA${viewname}>
-        secondaryAction?: IAction<I${pkg.name}VDATA${viewname}>
-        otherActions?: Array<IAction<I${pkg.name}VDATA${viewname}>>
+      declare interface I${pkg.uri.id}VOPT${viewname} {
+        content: I${pkg.uri.id}VCONTENT${viewname}
+        primaryAction?: IAction<I${pkg.uri.id}VDATA${viewname}>
+        secondaryAction?: IAction<I${pkg.uri.id}VDATA${viewname}>
+        otherActions?: Array<IAction<I${pkg.uri.id}VDATA${viewname}>>
       }
       
-      declare interface I${pkg.name}VDATA${viewname} {
+      declare interface I${pkg.uri.id}VDATA${viewname} {
 ${viewfields.decl.join('\n')}
       }
 
-      declare type I${pkg.name}VBIND${viewname}<S> ={
+      declare type I${pkg.uri.id}VBIND${viewname}<S> ={
         ${viewfields.bind.join('\n')}
       }
         
-      declare type I${pkg.name}VCONTENT${viewname} = Array<{
+      declare type I${pkg.uri.id}VCONTENT${viewname} = Array<{
         kind: 'show' | 'entry'
         field: string
-        type: I${pkg.name}TypeName
+        type: I${pkg.uri.id}TypeName
       }>    
       `.split('\n'))
       }
@@ -272,7 +272,7 @@ ${viewfields.decl.join('\n')}
   for (const typename of typesnames) {
     const tp = pkg.types[typename]
     lines = lines.concat(`
-    declare interface I${pkg.name}TOPT${typename} {
+    declare interface I${pkg.uri.id}TOPT${typename} {
       base: BasicTypes
       validate? (val: ${tp.base}): string|false
       format? (val: ${tp.base}): string
@@ -282,13 +282,13 @@ ${viewfields.decl.join('\n')}
   }
 
   lines = lines.concat(`
-  declare type I${pkg.name}ColFields = {
-    [fieldName: string]: I${pkg.name}ColField
+  declare type I${pkg.uri.id}ColFields = {
+    [fieldName: string]: I${pkg.uri.id}ColField
   }
   
-  declare interface I${pkg.name}ColField {
+  declare interface I${pkg.uri.id}ColField {
     description: string
-    type: I${pkg.name}TypeName
+    type: I${pkg.uri.id}TypeName
   }`.split('\n'))
 
   for (const docname of docsnames) {
@@ -300,18 +300,18 @@ ${viewfields.decl.join('\n')}
     const docactionsnames = Object.keys(doc.actions||{})
 
     lines = lines.concat(`
-    declare type I${pkg.name}DOCOLNAME${docname} = ${colfieldsnames.map((f) => '"' + f + '"').join('|')}
-    declare interface I${pkg.name}DOPT${docname} {
+    declare type I${pkg.uri.id}DOCOLNAME${docname} = ${colfieldsnames.map((f) => '"' + f + '"').join('|')}
+    declare interface I${pkg.uri.id}DOPT${docname} {
       persistence: DocPersistence
       states: {
 ${docStateDecl}
       }
-      collection: I${pkg.name}ColFields
-      indexes: {[name:string]:I${pkg.name}DOCOLNAME${docname}[]}
-      actions: I${pkg.name}DOCACTIONS${docname}
+      collection: I${pkg.uri.id}ColFields
+      indexes: {[name:string]:I${pkg.uri.id}DOCOLNAME${docname}[]}
+      actions: I${pkg.uri.id}DOCACTIONS${docname}
     }
     `.split('\n'))
-    lines.push(`    declare interface I${pkg.name}DOCACTIONS${docname} {`)
+    lines.push(`    declare interface I${pkg.uri.id}DOCACTIONS${docname} {`)
     for (const docactionname of docactionsnames) {
       lines=lines.concat(`
         ${docactionname}: {

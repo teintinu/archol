@@ -1,5 +1,6 @@
 import * as decl from '../typesDecl';
 import * as def from '../typesDef';
+import { join } from 'path';
 import {
   Project, ExpressionStatement, CallExpression, Identifier, Node, ts,
   NumericLiteral, StringLiteral, BooleanLiteral,
@@ -8,12 +9,11 @@ import {
   PropertyAccessExpression,
   MethodDeclaration
 } from 'ts-morph';
-import { PropertyName } from 'typescript';
 
 export function loadWorkspace (ws: def.Workspace) {
 
   const apps: { [appName: string]: decl.Application } = {}
-  const pkgs: { [pkgName: string]: decl.Package } = {}
+  const pkgs: { [pkgUri in decl.PackageURI]: decl.Package } = {} as any
   const ret: def.DefWorkspace = { ...ws, apps, pkgs }
 
   const decl = new Project({
@@ -68,9 +68,10 @@ export function loadWorkspace (ws: def.Workspace) {
       const appopts = parseObjArg(args[1])
       return declareApp(appname, appopts)
     } else if (fn === 'declarePackage') {
-      if (args.length !== 1) fail(expr1.getSourceFile().getFilePath() + ' declarePackage precisa de dois parametros')
-      const pkgname = parseStrArg(args[0])
-      return declarePackage(pkgname)
+      if (args.length !== 2) fail(expr1.getSourceFile().getFilePath() + ' declarePackage precisa de dois parametros')
+      const pkgns = parseStrArg(args[0])
+      const pkgpath = parseStrArg(args[1])
+      return declarePackage(pkgns, pkgpath)
     }
     else fail(expr1.getSourceFile().getFilePath() + ' declareApp ou declarePackage era esperado')
   }
@@ -152,14 +153,22 @@ export function loadWorkspace (ws: def.Workspace) {
     return apps[name]
   }
 
-  function declarePackage (name: string) {
-    if (pkgs[name]) throw new Error('Duplicated package name: ' + name)
-    const pkg: decl.Package = pkgs[name] = { name } as any
+  function declarePackage (ns: string, path: string) {
+    const full: decl.PackageURI = join(ns, path) as any
+    const id = full.replace(/[\/\.]/g, '_').replace(/[^\w.]/g, '')
+    const uri = {
+      id,
+      full,
+      ns,
+      path
+    }
+    if (pkgs[full]) throw new Error('Duplicated package uri: ' + full)
+    const pkg: decl.Package = pkgs[full] = { uri } as any
     return { uses }
     function uses (expr1: CallExpression) {
       const args = expr1.getArguments()
       if (args.length !== 1) fail(expr1.getSourceFile().getFilePath() + ' uses precisa de um parametro')
-      pkg.uses = parseArrArg(args[0])
+      pkg.uses = parseObjArg(args[0])
       return { roles }
     }
     function roles (expr1: CallExpression) {

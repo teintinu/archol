@@ -1,24 +1,24 @@
-import { BuilderImpl, Package, I18N, Lang, Process, Ast } from "../typesDef";
-import { join, resolve } from 'path'
-import { Project } from "ts-morph";
-import { writeFile, writeLines } from '../sys';
+import { BuilderImpl, Package, I18N, Lang, Ast } from "../typesDef";
+import { join } from 'path'
+import { writeLines } from '../sys';
 
 export const quasarMongo: BuilderImpl = {
   async buildApp (ws, app, info) {
     const appDir = join(ws.rootDir, info.config.rootDir, '/src/components/archol')
     const indexlines: string[] = []
     const pkgnames: string[] = []
-    for (const pkg of app.uses) {
-      pkgnames.push(pkg.name)
-      indexlines.push('import * as processes from \'./' + pkg.name + '/processes\'')
-      indexlines.push('import * as types from \'./' + pkg.name + '/types\'')
-      saveTypes(pkg)
-      saveDocs(pkg)
-      saveProcesses(pkg)
-    }
+    // for (const pkguri of app.uses) {
+    //   pkgnames.push(pkg.uri.id)
+    //   indexlines.push('import * as types from \'./' + pkg.uri.id + '/types\'')
+    //   indexlines.push('import * as documents from \'./' + pkg.uri.id + '/documents\'')
+    //   indexlines.push('import * as processes from \'./' + pkg.uri.id + '/processes\'')
+    //   saveTypes(pkg)
+    //   saveDocs(pkg)
+    //   saveProcesses(pkg)
+    // }
     saveAppIndex()
     function saveAppIndex () {
-      indexlines.push('export {processes, types}')
+      indexlines.push('export {types, documents, processes}')
       writeLines(appDir + '/index.ts', indexlines)
     }
 
@@ -49,7 +49,7 @@ export const quasarMongo: BuilderImpl = {
       for (const p of pkg.processes) {
         lines.push(
           'export const ' + p.name + ': Process = {',
-          '  pid: \'' + pkg.name + '.' + p.name + '\',',
+          '  pid: \'' + pkg.uri.id + '.' + p.name + '\',',
         )
         saveI18N(lines, '  ', p, 'title', false)
         saveI18N(lines, '  ', p, 'caption', false)
@@ -59,7 +59,7 @@ export const quasarMongo: BuilderImpl = {
       }
       lines.push('')
       lines.push('export const allProcesses = [' + pkg.processes.map((p) => p.name).join(',') + ']')
-      writeLines(appDir + '/' + pkg.name + '/processes.ts', lines)
+      writeLines(appDir + '/' + pkg.uri.id + '/processes.ts', lines)
     }
 
     function saveTypes (pkg: Package) {
@@ -67,7 +67,7 @@ export const quasarMongo: BuilderImpl = {
       for (const t of pkg.types) {
         lines.push(
           'export const ' + t.name + ': Type = {',
-          '  tid: \'' + pkg.name + '.' + t.name + '\',',
+          '  tid: \'' + pkg.uri.id + '.' + t.name + '\',',
           '  base: \'' + t.base + '\',',
         )
 
@@ -79,25 +79,22 @@ export const quasarMongo: BuilderImpl = {
       }
       lines.push('')
       lines.push('export const allTypes = [' + pkg.types.map((p) => p.name).join(',') + ']')
-      writeLines(appDir + '/' + pkg.name + '/types.ts', lines)
+      writeLines(appDir + '/' + pkg.uri.id + '/types.ts', lines)
     }
 
     function saveDocs (pkg: Package) {
-      const lines: string[] = ['import { Process } from \'../../archollib\'']
-      for (const p of pkg.processes) {
+      return
+      const lines: string[] = ['import { Document } from \'../../archollib\'']
+      for (const d of pkg.documents) {
         lines.push(
-          'export const ' + p.name + ': Process = {',
-          '  pid: \'' + pkg.name + '.' + p.name + '\',',
+          'export const ' + d.name + ': Process = {',
+          '  did: \'' + pkg.uri.id + '.' + d.name + '\',',
         )
-        saveI18N(lines, '  ', p, 'title', false)
-        saveI18N(lines, '  ', p, 'caption', false)
-        lines.push('  icon: \'' + p.icon + '\',')
-        lines.push('  volatile: ' + (p.volatile ? 'true' : 'false') + ',')
         lines.push('}')
       }
       lines.push('')
       lines.push('export const processes = [' + pkg.processes.map((p) => p.name).join(',') + ']')
-      writeLines(appDir + '/' + pkg.name + '/docs.ts', lines)
+      writeLines(appDir + '/' + pkg.uri.id + '/docs.ts', lines)
     }
   }
 }

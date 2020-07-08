@@ -6,7 +6,10 @@ export interface Application {
   name: string
   description: I18N,
   icon: Icon,
-  uses: Package[]
+  uses: PackageUses,
+  packages: {
+    [uri in PackageURI]: Package
+  },
   lang: Lang
   roles: Role[]
   langs: Lang[]
@@ -26,10 +29,21 @@ export interface I18NP {
 
 export type Lang = 'pt' | 'en'
 
+export type PackageURI = '$PackageURI'
+
+export interface PackageUses {
+  [alias: string]: Package
+}
+
 export interface Package {
-  name: string
+  uri: {
+    id: string
+    full: PackageURI
+    ns: string
+    path: string
+  },
   redefines?: Package
-  uses: Package[]
+  uses: PackageUses,
   types: Type[],
   documents: Document[],
   processes: Process[],
@@ -164,7 +178,7 @@ export interface Ast {
 
 export interface DefWorkspace extends Workspace {
   apps: { [appName: string]: decl.Application },
-  pkgs: { [pkgName: string]: decl.Package },
+  pkgs: { [pkgUri in decl.PackageURI]: decl.Package },
 }
 
 export interface Workspace {
@@ -192,19 +206,25 @@ export interface BuilderConfig {
 
 export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang) {
 
-  const allPackages: { [name in string]: () => Promise<Package> } = {}
+  const packages: { [uri in decl.PackageURI]: () => Promise<Package> } = {} as any
 
   const declApp: decl.Application = await ws.apps[appname]
   if (!declApp) throw new Error('invalid app name ' + appname)
 
   const defLang = declApp.langs[0]
   const appLangs = declApp.langs
-  const appPackages = await vusePackages(declApp.uses);
+  const appUses = await vusePackages(declApp.uses);
+  const appPackages: { [uri in PackageURI]: Package } = {} as any
+  await Promise.all(Object.keys(packages).map(async (pkguri) => {
+    const pkg = await packages[(pkguri as decl.PackageURI)]()
+    appPackages[(pkguri as PackageURI)] = pkg
+  }))
   const def: Application = {
     name: videntifier(declApp, 'name'),
     description: vi18n(declApp, 'description'),
     icon: vicon(declApp, 'icon'),
-    uses: appPackages,
+    uses: appUses,
+    packages: appPackages,
     roles: allroles(),
     lang: defLang,
     langs: appLangs,
@@ -262,36 +282,38 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
   }
 
   function allroles () {
-    return appPackages
-      .map((p) => p.roles)
+    return Object.keys(appPackages)
+      .map((pkguri) => appPackages[(pkguri as PackageURI)].roles)
       .reduce((r, c) => r.concat(c), [])
       .filter((r, i, a) => a.some((r2, i2) => i === i2 && r.name === r2.name))
   }
 
-  async function vusePackages (uses: string[]): Promise<Package[]> {
-    const ret: Package[] = []
-    for (const pkgname of uses) {
-      const pkg = await vusePackage(pkgname)
-      ret.push(pkg)
+  async function vusePackages (uses: decl.PackageUses): Promise<PackageUses> {
+    const ret: PackageUses = {}
+    const aliases: PackageURI[] = Object.keys(uses) as any
+    for (const alias of aliases) {
+      const uri = uses[alias]
+      const pkg = await vusePackage(uri)
+      ret[alias] = pkg
     }
     return ret
   }
 
-  async function vpackageOpt (pkgname?: string): Promise<Package | undefined> {
-    if (pkgname) return vusePackage(pkgname)
+  async function vpackageOpt (pkguri?: decl.PackageURI): Promise<Package | undefined> {
+    if (pkguri) return vusePackage(pkguri)
   }
 
-  async function vusePackage (pkgname: string): Promise<Package> {
-    const declPkg: decl.Package = ws.pkgs[pkgname]
-    if (!declPkg) throw new Error('invalid package ' + pkgname)
+  async function vusePackage (pkguri: decl.PackageURI): Promise<Package> {
+    const declPkg = ws.pkgs[pkguri]
+    if (!declPkg) throw new Error('invalid package ' + pkguri)
 
-    const ppkg = allPackages[pkgname]
+    const ppkg = packages[pkguri]
     if (ppkg) return ppkg()
 
-    const pkg: Package = {
-      name: videntifier(declPkg, 'name'),
-    } as any
-    allPackages[pkgname] = async () => pkg
+    const uri = declPkg.uri
+
+    const pkg: Package = { uri } as any
+    packages[pkguri] = async () => pkg
 
     const pkgRoles = vpkgroles()
     pkg.roles = pkgRoles

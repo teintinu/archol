@@ -4,7 +4,10 @@ export interface Application {
   name: string
   description: I18N,
   icon: Icon,
-  uses: string[]
+  uses: PackageUses,
+  packages: {
+    [uri in PackageURI]: Package
+  },
   langs: Lang[]
   builders: {
     [builderName: string]: BuilderConfig
@@ -19,10 +22,21 @@ export type I18N = string | {
 
 export type Lang = 'pt' | 'en'
 
+export type PackageURI = '$PackageURI'
+
+export interface PackageUses {
+  [alias: string]: PackageURI
+}
+
 export interface Package {
-  name: string
-  redefines?: string
-  uses: string[]
+  uri: {
+    id: string
+    full: PackageURI
+    ns: string
+    path: string
+  },
+  redefines?: PackageURI
+  uses: PackageUses,
   types: Types,
   documents: Documents,
   processes: Processes,

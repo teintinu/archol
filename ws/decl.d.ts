@@ -24,7 +24,7 @@
   declare function declareApp (name: string, opts: {
     description: I18N,
     icon: Icon,
-    uses: PackageUrls[],
+    uses: PackageUses,
     langs: Lang[],
     builders: Builders
   }): void
@@ -34,8 +34,13 @@
     icon?: Icon,
     run: "next" | ((data: T) => Promise<void>)
   }  
-  declare type PackageUrls = "hw"
-      
+
+  declare type PackageUses = {
+    [alias: string]: PackageUrls
+  }
+  
+  declare type PackageUrls = "test.archol.com/hw"     
+
   declare type BasicTypes = "string"|"number"|"boolean"|"date"
 
   declare type DocPersistence = 'session' | 'persistent'
@@ -52,83 +57,83 @@
   
 
 
-  declare function declarePackage (name: 'hw'): IhwUses
-  declare interface IhwUses {
-    uses (packages: PackageUrls[]): IhwRoles
+  declare function declarePackage (ns: 'test.archol.com', path: 'hw'): Itest_archol_com_hwUses
+  declare interface Itest_archol_com_hwUses {
+    uses (packages: PackageUses): Itest_archol_com_hwRoles
   }
   
-  declare interface IhwRoles {
-    roles (roles: Roles): IhwProcesses
+  declare interface Itest_archol_com_hwRoles {
+    roles (roles: Roles): Itest_archol_com_hwProcesses
   }
   
-  declare type IhwRole = "public"
-  declare type IhwUseRoles = IhwRole[]
+  declare type Itest_archol_com_hwRole = "public"
+  declare type Itest_archol_com_hwUseRoles = Itest_archol_com_hwRole[]
 
-  declare type IhwProcesses = {
+  declare type Itest_archol_com_hwProcesses = {
     processes (processes: {
-      askAndShowName: IhwProcessaskAndShowName,
-    }): IhwFunctions
+      askAndShowName: Itest_archol_com_hwProcessaskAndShowName,
+    }): Itest_archol_com_hwFunctions
   }
 
-  declare type IhwViewNames = "askFirstName"|"askLastName"|"showFullName"
+  declare type Itest_archol_com_hwViewNames = "askFirstName"|"askLastName"|"showFullName"
 
-  declare type IhwFields = {
-    [fieldName: string]: IhwField
+  declare type Itest_archol_com_hwFields = {
+    [fieldName: string]: Itest_archol_com_hwField
   }
   
-  declare interface IhwField {
-    type: IhwTypeName
+  declare interface Itest_archol_com_hwField {
+    type: Itest_archol_com_hwTypeName
   }
   
-  declare type IhwTypeName = 'string'|'number'|'boolean'|'date'|'partnome'
+  declare type Itest_archol_com_hwTypeName = 'string'|'number'|'boolean'|'date'|'partnome'
   
-  declare interface IhwFunctions {
+  declare interface Itest_archol_com_hwFunctions {
     functions (functions: {
-      concatname: IhwOPTconcatname,
-      usefirst: IhwOPTusefirst,
-    }): IhwViews
+      concatname: Itest_archol_com_hwOPTconcatname,
+      usefirst: Itest_archol_com_hwOPTusefirst,
+    }): Itest_archol_com_hwViews
   }
 
-  declare interface IhwViews {
+  declare interface Itest_archol_com_hwViews {
     views (views: {
-      askFirstName: IhwVOPTaskFirstName,
-      askLastName: IhwVOPTaskLastName,
-      showFullName: IhwVOPTshowFullName,      
-    }): IhwTypes
+      askFirstName: Itest_archol_com_hwVOPTaskFirstName,
+      askLastName: Itest_archol_com_hwVOPTaskLastName,
+      showFullName: Itest_archol_com_hwVOPTshowFullName,      
+    }): Itest_archol_com_hwTypes
   }
 
-  declare interface IhwTypes {
+  declare interface Itest_archol_com_hwTypes {
     types (types: {
-      partnome: IhwTOPTpartnome,      
-    }): IhwDocs
+      partnome: Itest_archol_com_hwTOPTpartnome,      
+    }): Itest_archol_com_hwDocs
   }
 
-  declare interface IhwDocs {
+  declare interface Itest_archol_com_hwDocs {
     documents (documents: {
-      nomes: IhwDOPTnomes,      
+      nomes: Itest_archol_com_hwDOPTnomes,      
     }): void
   }
   
 
 
-  declare interface IhwProcessaskAndShowName {
+  declare interface Itest_archol_com_hwProcessaskAndShowName {
     title: I18N,
     caption: I18N,
     icon: Icon,
-    start: IhwTaskNameaskAndShowName,
+    start: Itest_archol_com_hwTaskNameaskAndShowName,
     volatile: true,
-    roles: IhwUseRoles[],
-    vars: IhwVarsaskAndShowName
-    tasks: IhwTasksaskAndShowName,
+    roles: Itest_archol_com_hwUseRoles[],
+    vars: Itest_archol_com_hwVarsaskAndShowName
+    tasks: Itest_archol_com_hwTasksaskAndShowName,
   }
     
-  declare interface IhwVarsaskAndShowName {
-    input: IhwFields
-    output: IhwFields
-    local: IhwFields
+  declare interface Itest_archol_com_hwVarsaskAndShowName {
+    input: Itest_archol_com_hwFields
+    output: Itest_archol_com_hwFields
+    local: Itest_archol_com_hwFields
   }
   
-  declare interface IhwScopeaskAndShowName {
+  declare interface Itest_archol_com_hwScopeaskAndShowName {
     input: {
 
     }
@@ -140,182 +145,182 @@
     }
   }
   
-  declare type IhwScopePathaskAndShowName = "local.firstName"|"local.lastName"|"local.fullName"      
+  declare type Itest_archol_com_hwScopePathaskAndShowName = "local.firstName"|"local.lastName"|"local.fullName"      
   
-  declare type IhwTaskNameaskAndShowName = "askFirst"|"askLast"|"concatName"|"useFirst"|"showFull"
+  declare type Itest_archol_com_hwTaskNameaskAndShowName = "askFirst"|"askLast"|"concatName"|"useFirst"|"showFull"
   
-  declare type IhwTasksaskAndShowName = {
-    [taskName: string]: IhwTaskaskAndShowName
+  declare type Itest_archol_com_hwTasksaskAndShowName = {
+    [taskName: string]: Itest_archol_com_hwTaskaskAndShowName
   }
   
-  declare type IhwNextTaskaskAndShowName = IhwTaskNameaskAndShowName | {
-    [task in IhwTaskNameaskAndShowName]?: (vars: IhwScopeaskAndShowName) => boolean
+  declare type Itest_archol_com_hwNextTaskaskAndShowName = Itest_archol_com_hwTaskNameaskAndShowName | {
+    [task in Itest_archol_com_hwTaskNameaskAndShowName]?: (vars: Itest_archol_com_hwScopeaskAndShowName) => boolean
   }
 
-  declare type IhwUseFunctionaskAndShowName = {
+  declare type Itest_archol_com_hwUseFunctionaskAndShowName = {
 
 
    
     function: 'concatname',
     input: {
-      first: IhwScopePathaskAndShowName
-      last: IhwScopePathaskAndShowName
+      first: Itest_archol_com_hwScopePathaskAndShowName
+      last: Itest_archol_com_hwScopePathaskAndShowName
     },
     output: {
-            full: IhwScopePathaskAndShowName
+            full: Itest_archol_com_hwScopePathaskAndShowName
     }
     
   } | {
    
     function: 'usefirst',
     input: {
-      first: IhwScopePathaskAndShowName
+      first: Itest_archol_com_hwScopePathaskAndShowName
     },
     output: {
-            full: IhwScopePathaskAndShowName
+            full: Itest_archol_com_hwScopePathaskAndShowName
     }
     
   }
 
-    declare interface IhwOPTconcatname {
+    declare interface Itest_archol_com_hwOPTconcatname {
       level: FunctionLevel
-      input: IhwFields,
-      output: IhwFields,
-      code (vars: { input: IhwINPUTconcatname, output: IhwOUTPUTconcatname }): void
+      input: Itest_archol_com_hwFields,
+      output: Itest_archol_com_hwFields,
+      code (vars: { input: Itest_archol_com_hwINPUTconcatname, output: Itest_archol_com_hwOUTPUTconcatname }): void
     }
     
-    declare interface IhwINPUTconcatname {
+    declare interface Itest_archol_com_hwINPUTconcatname {
       first: string,      last: string
     }
     
-    declare interface IhwOUTPUTconcatname {
+    declare interface Itest_archol_com_hwOUTPUTconcatname {
       full: string
     }
 
-    declare interface IhwOPTusefirst {
+    declare interface Itest_archol_com_hwOPTusefirst {
       level: FunctionLevel
-      input: IhwFields,
-      output: IhwFields,
-      code (vars: { input: IhwINPUTusefirst, output: IhwOUTPUTusefirst }): void
+      input: Itest_archol_com_hwFields,
+      output: Itest_archol_com_hwFields,
+      code (vars: { input: Itest_archol_com_hwINPUTusefirst, output: Itest_archol_com_hwOUTPUTusefirst }): void
     }
     
-    declare interface IhwINPUTusefirst {
+    declare interface Itest_archol_com_hwINPUTusefirst {
       first: string
     }
     
-    declare interface IhwOUTPUTusefirst {
+    declare interface Itest_archol_com_hwOUTPUTusefirst {
       full: string
     }
    
   
-      declare interface IhwVOPTaskFirstName {
-        content: IhwVCONTENTaskFirstName
-        primaryAction?: IAction<IhwVDATAaskFirstName>
-        secondaryAction?: IAction<IhwVDATAaskFirstName>
-        otherActions?: Array<IAction<IhwVDATAaskFirstName>>
+      declare interface Itest_archol_com_hwVOPTaskFirstName {
+        content: Itest_archol_com_hwVCONTENTaskFirstName
+        primaryAction?: IAction<Itest_archol_com_hwVDATAaskFirstName>
+        secondaryAction?: IAction<Itest_archol_com_hwVDATAaskFirstName>
+        otherActions?: Array<IAction<Itest_archol_com_hwVDATAaskFirstName>>
       }
       
-      declare interface IhwVDATAaskFirstName {
+      declare interface Itest_archol_com_hwVDATAaskFirstName {
         firstName: string
       }
 
-      declare type IhwVBINDaskFirstName<S> ={
+      declare type Itest_archol_com_hwVBINDaskFirstName<S> ={
                 firstName: S
       }
         
-      declare type IhwVCONTENTaskFirstName = Array<{
+      declare type Itest_archol_com_hwVCONTENTaskFirstName = Array<{
         kind: 'show' | 'entry'
         field: string
-        type: IhwTypeName
+        type: Itest_archol_com_hwTypeName
       }>    
       
    
   
-      declare interface IhwVOPTaskLastName {
-        content: IhwVCONTENTaskLastName
-        primaryAction?: IAction<IhwVDATAaskLastName>
-        secondaryAction?: IAction<IhwVDATAaskLastName>
-        otherActions?: Array<IAction<IhwVDATAaskLastName>>
+      declare interface Itest_archol_com_hwVOPTaskLastName {
+        content: Itest_archol_com_hwVCONTENTaskLastName
+        primaryAction?: IAction<Itest_archol_com_hwVDATAaskLastName>
+        secondaryAction?: IAction<Itest_archol_com_hwVDATAaskLastName>
+        otherActions?: Array<IAction<Itest_archol_com_hwVDATAaskLastName>>
       }
       
-      declare interface IhwVDATAaskLastName {
+      declare interface Itest_archol_com_hwVDATAaskLastName {
         lastName: string
       }
 
-      declare type IhwVBINDaskLastName<S> ={
+      declare type Itest_archol_com_hwVBINDaskLastName<S> ={
                 lastName: S
       }
         
-      declare type IhwVCONTENTaskLastName = Array<{
+      declare type Itest_archol_com_hwVCONTENTaskLastName = Array<{
         kind: 'show' | 'entry'
         field: string
-        type: IhwTypeName
+        type: Itest_archol_com_hwTypeName
       }>    
       
    
   
-      declare interface IhwVOPTshowFullName {
-        content: IhwVCONTENTshowFullName
-        primaryAction?: IAction<IhwVDATAshowFullName>
-        secondaryAction?: IAction<IhwVDATAshowFullName>
-        otherActions?: Array<IAction<IhwVDATAshowFullName>>
+      declare interface Itest_archol_com_hwVOPTshowFullName {
+        content: Itest_archol_com_hwVCONTENTshowFullName
+        primaryAction?: IAction<Itest_archol_com_hwVDATAshowFullName>
+        secondaryAction?: IAction<Itest_archol_com_hwVDATAshowFullName>
+        otherActions?: Array<IAction<Itest_archol_com_hwVDATAshowFullName>>
       }
       
-      declare interface IhwVDATAshowFullName {
+      declare interface Itest_archol_com_hwVDATAshowFullName {
         fullName: string
       }
 
-      declare type IhwVBINDshowFullName<S> ={
+      declare type Itest_archol_com_hwVBINDshowFullName<S> ={
                 fullName: S
       }
         
-      declare type IhwVCONTENTshowFullName = Array<{
+      declare type Itest_archol_com_hwVCONTENTshowFullName = Array<{
         kind: 'show' | 'entry'
         field: string
-        type: IhwTypeName
+        type: Itest_archol_com_hwTypeName
       }>    
       
-declare type IhwTaskaskAndShowName =
+declare type Itest_archol_com_hwTaskaskAndShowName =
   {
-        useFunction: IhwUseFunctionaskAndShowName,
-        next: IhwNextTaskaskAndShowName,
+        useFunction: Itest_archol_com_hwUseFunctionaskAndShowName,
+        next: Itest_archol_com_hwNextTaskaskAndShowName,
       }
  | {
-        useFunction: IhwUseFunctionaskAndShowName,
-        next: IhwNextTaskaskAndShowName,
+        useFunction: Itest_archol_com_hwUseFunctionaskAndShowName,
+        next: Itest_archol_com_hwNextTaskaskAndShowName,
       }
 
         | {
           useView: {
             view: 'askFirstName'
-            bind: IhwVBINDaskFirstName<IhwScopePathaskAndShowName>
+            bind: Itest_archol_com_hwVBINDaskFirstName<Itest_archol_com_hwScopePathaskAndShowName>
           },
-          next: IhwNextTaskaskAndShowName,
-          roles: IhwUseRoles
+          next: Itest_archol_com_hwNextTaskaskAndShowName,
+          roles: Itest_archol_com_hwUseRoles
         }
       
 
         | {
           useView: {
             view: 'askLastName'
-            bind: IhwVBINDaskLastName<IhwScopePathaskAndShowName>
+            bind: Itest_archol_com_hwVBINDaskLastName<Itest_archol_com_hwScopePathaskAndShowName>
           },
-          next: IhwNextTaskaskAndShowName,
-          roles: IhwUseRoles
+          next: Itest_archol_com_hwNextTaskaskAndShowName,
+          roles: Itest_archol_com_hwUseRoles
         }
       
 
         | {
           useView: {
             view: 'showFullName'
-            bind: IhwVBINDshowFullName<IhwScopePathaskAndShowName>
+            bind: Itest_archol_com_hwVBINDshowFullName<Itest_archol_com_hwScopePathaskAndShowName>
           },
-          next: IhwNextTaskaskAndShowName,
-          roles: IhwUseRoles
+          next: Itest_archol_com_hwNextTaskaskAndShowName,
+          roles: Itest_archol_com_hwUseRoles
         }
       
 
-    declare interface IhwTOPTpartnome {
+    declare interface Itest_archol_com_hwTOPTpartnome {
       base: BasicTypes
       validate? (val: string): string|false
       format? (val: string): string
@@ -323,28 +328,28 @@ declare type IhwTaskaskAndShowName =
     }
     
 
-  declare type IhwColFields = {
-    [fieldName: string]: IhwColField
+  declare type Itest_archol_com_hwColFields = {
+    [fieldName: string]: Itest_archol_com_hwColField
   }
   
-  declare interface IhwColField {
+  declare interface Itest_archol_com_hwColField {
     description: string
-    type: IhwTypeName
+    type: Itest_archol_com_hwTypeName
   }
 
-    declare type IhwDOCOLNAMEnomes = "fname"|"lname"
-    declare interface IhwDOPTnomes {
+    declare type Itest_archol_com_hwDOCOLNAMEnomes = "fname"|"lname"
+    declare interface Itest_archol_com_hwDOPTnomes {
       persistence: DocPersistence
       states: {
         partial: DocState
         complete: DocState
       }
-      collection: IhwColFields
-      indexes: {[name:string]:IhwDOCOLNAMEnomes[]}
-      actions: IhwDOCACTIONSnomes
+      collection: Itest_archol_com_hwColFields
+      indexes: {[name:string]:Itest_archol_com_hwDOCOLNAMEnomes[]}
+      actions: Itest_archol_com_hwDOCACTIONSnomes
     }
     
-    declare interface IhwDOCACTIONSnomes {
+    declare interface Itest_archol_com_hwDOCACTIONSnomes {
 
         startHw: {
           from: 'newDoc'|"partial"|"complete",
