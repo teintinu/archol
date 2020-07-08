@@ -7,15 +7,15 @@ export const quasarMongo: BuilderImpl = {
     const appDir = join(ws.rootDir, info.config.rootDir, '/src/components/archol')
     const indexlines: string[] = []
     const pkgnames: string[] = []
-    // for (const pkguri of app.uses) {
-    //   pkgnames.push(pkg.uri.id)
-    //   indexlines.push('import * as types from \'./' + pkg.uri.id + '/types\'')
-    //   indexlines.push('import * as documents from \'./' + pkg.uri.id + '/documents\'')
-    //   indexlines.push('import * as processes from \'./' + pkg.uri.id + '/processes\'')
-    //   saveTypes(pkg)
-    //   saveDocs(pkg)
-    //   saveProcesses(pkg)
-    // }
+    for (const pkg of app.packageList) {
+      pkgnames.push(pkg.uri.id)
+      indexlines.push('import * as types from \'./' + pkg.uri.id + '/types\'')
+      indexlines.push('import * as documents from \'./' + pkg.uri.id + '/documents\'')
+      indexlines.push('import * as processes from \'./' + pkg.uri.id + '/processes\'')
+      saveTypes(pkg)
+      saveDocs(pkg)
+      saveProcesses(pkg)
+    }
     saveAppIndex()
     function saveAppIndex () {
       indexlines.push('export {types, documents, processes}')

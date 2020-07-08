@@ -7,6 +7,7 @@ export interface Application {
   description: I18N,
   icon: Icon,
   uses: PackageUses,
+  packageList: Package[],
   packages: {
     [uri in PackageURI]: Package
   },
@@ -206,7 +207,7 @@ export interface BuilderConfig {
 
 export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang) {
 
-  const packages: { [uri in decl.PackageURI]: () => Promise<Package> } = {} as any
+  const pPackages: { [uri in decl.PackageURI]: () => Promise<Package> } = {} as any
 
   const declApp: decl.Application = await ws.apps[appname]
   if (!declApp) throw new Error('invalid app name ' + appname)
@@ -215,8 +216,9 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
   const appLangs = declApp.langs
   const appUses = await vusePackages(declApp.uses);
   const appPackages: { [uri in PackageURI]: Package } = {} as any
-  await Promise.all(Object.keys(packages).map(async (pkguri) => {
-    const pkg = await packages[(pkguri as decl.PackageURI)]()
+  const appPackageList: Package[] = []
+  await Promise.all(Object.keys(pPackages).map(async (pkguri) => {
+    const pkg = await pPackages[(pkguri as decl.PackageURI)]()
     appPackages[(pkguri as PackageURI)] = pkg
   }))
   const def: Application = {
@@ -224,6 +226,7 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     description: vi18n(declApp, 'description'),
     icon: vicon(declApp, 'icon'),
     uses: appUses,
+    packageList: appPackageList,
     packages: appPackages,
     roles: allroles(),
     lang: defLang,
@@ -307,13 +310,13 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     const declPkg = ws.pkgs[pkguri]
     if (!declPkg) throw new Error('invalid package ' + pkguri)
 
-    const ppkg = packages[pkguri]
+    const ppkg = pPackages[pkguri]
     if (ppkg) return ppkg()
 
     const uri = declPkg.uri
 
     const pkg: Package = { uri } as any
-    packages[pkguri] = async () => pkg
+    pPackages[pkguri] = async () => pkg
 
     const pkgRoles = vpkgroles()
     pkg.roles = pkgRoles
@@ -339,6 +342,7 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     const pkgProcesses = vprocesses(declPkg.processes)
     pkg.processes = await pkgProcesses
 
+    appPackageList.push(pkg)
     return pkg
 
     function vpkgroles<T extends object> () {
