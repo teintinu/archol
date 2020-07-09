@@ -1,5 +1,6 @@
 import { reactive } from "@vue/composition-api"
 import { navigate } from "src/router"
+import { type } from "os"
 
 export interface Type {
   tId: string,
@@ -15,12 +16,43 @@ export interface Process {
   icon: string,
   volatile: boolean,
 }
+export interface DocumentField {
+  name: string
+  primary: boolean
+  type: Type
+}
+export type DocumentIndexFlag = 'asc' | 'desc' | 'text'
+export interface DocumentIndex {
+  name: string
+  fields: Array<{
+    field: DocumentField,
+    flag: DocumentIndexFlag,
+  }>
+}
+
+export interface DocumentState {
+  name: string
+  icon: string
+  description: I18N
+}
+
+export interface DocumentAction {
+  name: string
+  from: string[]
+  to: string[]
+  icon: string
+  description: I18N
+  run(data: any): Promise<void>
+}
+
 export interface Document {
   dId: string,
   volatile: boolean,
-  validation: {
-    [field: string]: (val: any) => false | string
-  }
+  fields: DocumentField[],
+  identification: 'GUID'
+  persistence: 'session' | 'persistent'
+  states: DocumentState[]
+  actions: DocumentAction[]  
 }
 
 export type I18N = {

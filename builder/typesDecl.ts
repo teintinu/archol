@@ -111,8 +111,8 @@ export interface DocActions {
 }
 
 export interface DocAction {
-  from: string
-  to: string
+  from: string[]
+  to: string[]
   icon: Icon
   description: I18N
   run: Ast | false

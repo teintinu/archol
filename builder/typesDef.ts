@@ -76,14 +76,18 @@ export interface Field {
   type: Type
 }
 
+export interface DocField extends Field {
+  primary: boolean
+}
+
 export interface DocumentState {
   icon: Icon
   description: I18N
 }
 
 export interface DocumentAction {
-  from: string
-  to: string
+  from: string[]
+  to: string[]
   icon: Icon
   description: I18N
   run: Ast | false
@@ -92,8 +96,7 @@ export interface DocumentAction {
 export interface Document {
   name: string
   identification: 'GUID'
-  primaryFields: Field[]
-  secondaryFields: Field[]
+  fields: DocField[]
   indexes: DocIndex[]
   persistence: 'session' | 'persistent'
   states: DocumentState[]
@@ -107,7 +110,7 @@ export interface DocIndexField {
 }
 
 export interface DocIndex {
-  name: string
+  name?: string
   fields: DocIndexField[]
 }
 
@@ -694,8 +697,8 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
         const ret: Document = {
           name: dn,
           identification: d.identification,
-          primaryFields,
-          secondaryFields,
+          fields: primaryFields.map((f) => ({ ...f, primary: true }))
+            .concat(secondaryFields.map((f) => ({ ...f, primary: false }))),
           persistence: d.persistence,
           states: await vdocstates(d.states),
           actions: await vdocactions(d.actions),
@@ -747,9 +750,9 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
           return fret
         }))
         const iret: DocIndex = {
-          name: idxn,
           fields
         }
+        if (idxn !== 'text') iret.name = idxn
         return iret
       }))
     }
