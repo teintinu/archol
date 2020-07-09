@@ -187,6 +187,7 @@ declarePackage('test.archol.com', 'hw')
   .documents({
     nomes: {
       persistence: 'session',
+      identification: 'GUID',
       states: {
         partial: {
           description: 'Parcialmente preenchido',
@@ -214,7 +215,6 @@ declarePackage('test.archol.com', 'hw')
       },
       actions: {
         startHw: {
-          from: 'newDoc',
           to: 'partial',
           icon: 'novo',
           description: 'Iniciar novo',

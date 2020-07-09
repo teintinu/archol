@@ -81,13 +81,15 @@ export interface DocField extends Field {
 }
 
 export interface DocumentState {
+  name: string
   icon: Icon
   description: I18N
 }
 
 export interface DocumentAction {
-  from: string[]
-  to: string[]
+  name: string
+  from: undefined | DocumentState[]
+  to: undefined | DocumentState[]
   icon: Icon
   description: I18N
   run: Ast | false
@@ -690,71 +692,87 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
 
     async function vdocuments (documents: decl.Documents) {
       const docnames = Object.keys(documents)
-      return await Promise.all(docnames.map(async (dn) => {
-        const d = documents[dn]
-        const primaryFields = await vfields(d.primaryFields)
-        const secondaryFields = await vfields(d.secondaryFields)
-        const ret: Document = {
-          name: dn,
-          identification: d.identification,
-          fields: primaryFields.map((f) => ({ ...f, primary: true }))
-            .concat(secondaryFields.map((f) => ({ ...f, primary: false }))),
-          persistence: d.persistence,
-          states: await vdocstates(d.states),
-          actions: await vdocactions(d.actions),
-          indexes: await vdocindexes(d.indexes, primaryFields, secondaryFields),
-        }
-        return ret
-      }))
+      return await Promise.all(docnames.map((dn) => vdocument(dn, documents[dn])))
     }
 
-    async function vdocstates (documentStates: decl.DocumentStates) {
-      const statenames = Object.keys(documentStates)
-      return await Promise.all(statenames.map(async (sn) => {
-        const s = documentStates[sn]
-        const ret: DocumentState = {
-          icon: vicon(s, 'icon'),
-          description: vi18n(s, "description")
-        }
-        return ret
-      }))
-    }
+    async function vdocument (dn: string, d: decl.Document) {
+      const primaryFields = await vfields(d.primaryFields)
+      const secondaryFields = await vfields(d.secondaryFields)
+      const docStates = vdocstates(d.states)
+      const ret: Document = {
+        name: dn,
+        identification: d.identification,
+        fields: primaryFields.map((f) => ({ ...f, primary: true }))
+          .concat(secondaryFields.map((f) => ({ ...f, primary: false }))),
+        persistence: d.persistence,
+        states: await docStates,
+        actions: await vdocactions(d.actions),
+        indexes: await vdocindexes(d.indexes, primaryFields, secondaryFields),
+      }
+      return ret
 
-    async function vdocactions (documentActions: decl.DocActions) {
-      const actionnames = Object.keys(documentActions)
-      return await Promise.all(actionnames.map(async (an) => {
-        const a = documentActions[an]
-        const ret: DocumentAction = {
-          from: a.from,
-          to: a.to,
-          icon: vicon(a, 'icon'),
-          description: vi18n(a, "description"),
-          run: vast(a, a.run)
-        }
-        return ret
-      }))
-    }
-
-    async function vdocindexes (documentIndexes: decl.DocIndexes, primaryFields: Field[], secondaryFields: Field[]) {
-      const indexnames = Object.keys(documentIndexes)
-      return await Promise.all(indexnames.map(async (idxn) => {
-        const i = documentIndexes[idxn]
-        const fields = await Promise.all(i.map(async (idxf) => {
-          const flag: DocIndexFlag = idxn === 'text' ? 'text' : 'asc'
-          let field = await vfindfield(primaryFields, idxf)
-          if (!field) field = await vfindfield(secondaryFields, idxf)
-          const fret: DocIndexField = {
-            field,
-            flag
+      async function vdocstates (documentStates: decl.DocumentStates) {
+        const statenames = Object.keys(documentStates)
+        return await Promise.all(statenames.map(async (sn) => {
+          const s = documentStates[sn]
+          const ret: DocumentState = {
+            name: sn,
+            icon: vicon(s, 'icon'),
+            description: vi18n(s, "description")
           }
-          return fret
+          return ret
         }))
-        const iret: DocIndex = {
-          fields
+      }
+
+      async function vusedocstates (obj: any, statenames: string | string[]) {
+        if (statenames) {
+          const d = await docStates
+          return (typeof statenames == 'string' ? [statenames] : statenames).map((sn) => {
+            const s = d.filter((si) => si.name === sn)[0]
+            if (!s) fail(obj, 'invalid state: ' + s)
+            return s
+          })
         }
-        if (idxn !== 'text') iret.name = idxn
-        return iret
-      }))
+        return undefined
+      }
+
+      async function vdocactions (documentActions: decl.DocActions) {
+        const actionnames = Object.keys(documentActions)
+        return await Promise.all(actionnames.map(async (an) => {
+          const a = documentActions[an]
+          const ret: DocumentAction = {
+            name: an,
+            from: await vusedocstates(a, a.from),
+            to: await vusedocstates(a, a.to),
+            icon: vicon(a, 'icon'),
+            description: vi18n(a, "description"),
+            run: vast(a, a.run)
+          }
+          return ret
+        }))
+      }
+
+      async function vdocindexes (documentIndexes: decl.DocIndexes, primaryFields: Field[], secondaryFields: Field[]) {
+        const indexnames = Object.keys(documentIndexes)
+        return await Promise.all(indexnames.map(async (idxn) => {
+          const i = documentIndexes[idxn]
+          const fields = await Promise.all(i.map(async (idxf) => {
+            const flag: DocIndexFlag = idxn === 'text' ? 'text' : 'asc'
+            let field = await vfindfield(primaryFields, idxf)
+            if (!field) field = await vfindfield(secondaryFields, idxf)
+            const fret: DocIndexField = {
+              field,
+              flag
+            }
+            return fret
+          }))
+          const iret: DocIndex = {
+            fields
+          }
+          if (idxn !== 'text') iret.name = idxn
+          return iret
+        }))
+      }
     }
 
     function vast (obj: any, source: false | decl.Ast): Ast {

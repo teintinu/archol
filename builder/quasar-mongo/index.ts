@@ -7,7 +7,7 @@ export const quasarMongo: BuilderImpl = {
   async buildApp (ws, app, info) {
     const appDir = join(ws.rootDir, info.config.rootDir, '/src/components/archol')
     const w = createSourceWriter(appDir + '/index.ts')
-    w.writeln('import { Type, Document, Process } from \'../archollib\'')
+    w.writeln('import { Type, Document, Process, DocIdentification } from \'../archollib\'')
 
     app.packageList.forEach(savePackage)
 
@@ -28,14 +28,15 @@ export const quasarMongo: BuilderImpl = {
       }
     }
 
-    function saveAST<T> (obj: T, prop: keyof T) {
+    function saveAST<T> (obj: T, thistype: string, prop: keyof T) {
       const ast: Ast = obj[prop] as any
       if (ast) {
         const m = ast.func
         const params = m.getParameters().map((p) => p.getName() + ':' + p.getType().getText())
+        if (thistype) params.unshift('this: ' + thistype)
         const code = m.getBodyText()
         if (code) {
-          w.writeln(m.getName() + '(' + params.join(',') + ') {');
+          w.writeln((m.getAsyncKeyword() ? 'async ' : '') + m.getName() + '(' + params.join(',') + '): ' + m.getReturnType().getText() + ' {');
           w.ident()
           w.writeln(code)
           w.identBack()
@@ -49,9 +50,18 @@ export const quasarMongo: BuilderImpl = {
     }
 
     function savePackage (pkg: Package) {
+      saveGlobals()
       saveTypes()
       saveDocs()
       saveProcesses()
+
+      function saveGlobals () {
+        w.writeln('export const identificationGUID: DocIdentification = {')
+        w.ident()
+        w.writeln('gen: \'TODO\'')
+        w.identBack()
+        w.writeln('}')
+      }
 
       function saveProcesses () {
         w.writeln('')
@@ -77,9 +87,9 @@ export const quasarMongo: BuilderImpl = {
           w.writeln('tId: \'' + pkg.uri.full + '/' + t.name + '\',')
           w.writeln('base: \'' + t.base + '\',')
 
-          saveAST(t, 'validate')
-          saveAST(t, 'format')
-          saveAST(t, 'parse')
+          saveAST(t, 'void', 'validate')
+          saveAST(t, 'void', 'format')
+          saveAST(t, 'void', 'parse')
 
           w.identBack()
           w.writeln('}')
@@ -90,10 +100,15 @@ export const quasarMongo: BuilderImpl = {
       function saveDocs () {
         w.writeln('')
         for (const d of pkg.documents) {
+          w.writeln('export interface I' + pkg.uri.id + '_d_' + d.name + ' {')
+          w.ident()
+          d.fields.forEach((f) => w.writeln(f.name + ': ' + f.type.base))
+          w.identBack()
+          w.writeln('}')
           w.writeln('export const ' + pkg.uri.id + '_d_' + d.name + ' = (()=> {')
           w.ident()
           d.fields.forEach((f) => {
-            w.writeln('const ' + f.name + ' = {')
+            w.writeln('const f' + f.name + ' = {')
             w.ident()
             w.writeln('name: \'' + f.name + '\',')
             w.writeln('primary: ' + vboolean(f.primary) + ',')
@@ -101,11 +116,23 @@ export const quasarMongo: BuilderImpl = {
             w.identBack()
             w.writeln('}')
           })
+          d.states.forEach((st) => {
+            w.writeln('const s' + st.name + ' = {')
+            w.ident()
+            w.writeln('name: \'' + st.name + '\',')
+            w.writeln('icon: \'' + st.icon + '\',')
+            saveI18N(st, "description", false)
+            w.identBack()
+            w.writeln('}')
+          })
           w.writeln('return {')
           w.ident()
           w.writeln('dId: \'' + pkg.uri.full + '/' + d.name + '\',')
+          w.writeln('identification: identification' + d.identification + ',')
           w.writeln('volatile: ' + vboolean(d.persistence === 'session') + ',')
-          w.writeln('fields: [' + d.fields.map((f) => f.name).join(',') + '],')
+          w.writeln('states: [' + d.states.map((st) => 's' + st.name).join(',') + '],')
+          w.writeln('fields: [' + d.fields.map((f) => 'f' + f.name).join(',') + '],')
+
           w.writeln('indexes: [')
           w.ident()
           d.indexes.map((i) => {
@@ -117,7 +144,7 @@ export const quasarMongo: BuilderImpl = {
             i.fields.map((fi) => {
               w.writeln('{')
               w.ident()
-              w.writeln('field: ' + fi.field.name + ',')
+              w.writeln('field: f' + fi.field.name + ',')
               w.writeln('flag: \'' + fi.flag + '\',')
               w.identBack()
               w.writeln('},')
@@ -128,7 +155,27 @@ export const quasarMongo: BuilderImpl = {
             w.writeln('},')
           })
           w.identBack()
-          w.writeln(']')
+          w.writeln('],')
+
+          w.writeln('actions: [')
+          w.ident()
+          d.actions.map((a) => {
+            w.writeln('{')
+            w.ident()
+            w.writeln('name: \'' + a.name + '\',')
+            if (a.from)
+              w.writeln('from: [' + a.from.map((asn) => 's' + asn.name).join() + '],')
+            if (a.to)
+              w.writeln('to: [' + a.to.map((asn) => 's' + asn.name).join() + '],')
+            w.writeln('icon: \'' + a.icon + '\',')
+            saveI18N(a, "description", false)
+            saveAST(a, 'I' + pkg.uri.id + '_d_' + d.name, 'run')
+            w.identBack()
+            w.writeln('},')
+          })
+          w.identBack()
+          w.writeln('],')
+
           w.identBack()
           w.writeln('}')
           w.identBack()

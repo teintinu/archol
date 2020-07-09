@@ -38,19 +38,22 @@ export interface DocumentState {
 
 export interface DocumentAction {
   name: string
-  from: string[]
-  to: string[]
+  from?: DocumentState[]
+  to: DocumentState[]
   icon: string
   description: I18N
   run(data: any): Promise<void>
+}
+
+export interface DocIdentification {
+  gen: 'TODO'
 }
 
 export interface Document {
   dId: string,
   volatile: boolean,
   fields: DocumentField[],
-  identification: 'GUID'
-  persistence: 'session' | 'persistent'
+  identification: DocIdentification
   states: DocumentState[]
   actions: DocumentAction[]  
 }

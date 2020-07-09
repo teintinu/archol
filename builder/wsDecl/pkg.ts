@@ -305,6 +305,7 @@ ${viewfields.decl.join('\n')}
     declare type I${pkg.uri.id}DOCOLNAME${docname} = ${pfieldsnames.concat(sfieldsnames).map((f) => '"' + f + '"').join('|')}
     declare interface I${pkg.uri.id}DOPT${docname} {
       persistence: DocPersistence
+      identification: 'GUID'
       states: {
 ${docStateDecl}
       }
@@ -314,12 +315,13 @@ ${docStateDecl}
       actions: I${pkg.uri.id}DOCACTIONS${docname}
     }
     `.split('\n'))
+    lines.push(`    declare type I${pkg.uri.id}STATENAMES${docname} = ${docstatesnames.map((s) => '"' + s + '"').join('|')}`)
     lines.push(`    declare interface I${pkg.uri.id}DOCACTIONS${docname} {`)
     for (const docactionname of docactionsnames) {
       lines = lines.concat(`
         ${docactionname}: {
-          from: 'newDoc'|${docstatesnames.map((s) => '"' + s + '"').join('|')},
-          to: ${docstatesnames.map((s) => '"' + s + '"').join('|')},
+          from?: I${pkg.uri.id}STATENAMES${docname}|I${pkg.uri.id}STATENAMES${docname}[],
+          to: I${pkg.uri.id}STATENAMES${docname}|I${pkg.uri.id}STATENAMES${docname}[],
           icon: Icon,
           description: I18N,
           run (fn: string): Promise<any>

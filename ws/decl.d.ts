@@ -337,6 +337,7 @@ declare type Itest_archol_com_hwTaskaskAndShowName =
     declare type Itest_archol_com_hwDOCOLNAMEnomes = "fname"|"lname"
     declare interface Itest_archol_com_hwDOPTnomes {
       persistence: DocPersistence
+      identification: 'GUID'
       states: {
         partial: DocState
         complete: DocState
@@ -347,11 +348,12 @@ declare type Itest_archol_com_hwTaskaskAndShowName =
       actions: Itest_archol_com_hwDOCACTIONSnomes
     }
     
+    declare type Itest_archol_com_hwSTATENAMESnomes = "partial"|"complete"
     declare interface Itest_archol_com_hwDOCACTIONSnomes {
 
         startHw: {
-          from: 'newDoc'|"partial"|"complete",
-          to: "partial"|"complete",
+          from?: Itest_archol_com_hwSTATENAMESnomes|Itest_archol_com_hwSTATENAMESnomes[],
+          to: Itest_archol_com_hwSTATENAMESnomes|Itest_archol_com_hwSTATENAMESnomes[],
           icon: Icon,
           description: I18N,
           run (fn: string): Promise<any>
@@ -359,8 +361,8 @@ declare type Itest_archol_com_hwTaskaskAndShowName =
       
 
         finishHw: {
-          from: 'newDoc'|"partial"|"complete",
-          to: "partial"|"complete",
+          from?: Itest_archol_com_hwSTATENAMESnomes|Itest_archol_com_hwSTATENAMESnomes[],
+          to: Itest_archol_com_hwSTATENAMESnomes|Itest_archol_com_hwSTATENAMESnomes[],
           icon: Icon,
           description: I18N,
           run (fn: string): Promise<any>
