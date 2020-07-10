@@ -21,15 +21,7 @@
     description: I18N,
     icon: Icon
   }
-  
-  declare function declareApp (name: string, opts: {
-    description: I18N,
-    icon: Icon,
-    uses: PackageUses,
-    langs: Lang[],
-    builders: Builders
-  }): void
-  
+    
   declare interface IAction<T> {
     caption: I18N,
     icon?: Icon,
@@ -53,6 +45,20 @@
   declare type FunctionLevel = 'cpu' | 'io'| 'proc'
 
   declare interface Builders {"quasar-mongo": BuilderConfig}
+
+  declare function declareApp (name: 'hw', opts: {
+    description: I18N,
+    icon: Icon,
+    uses: PackageUses,
+    langs: Lang[],
+    builders: Builders
+    mappings: IMappingshw
+  }): void
+
+  declare type IMappinghw = 'test.archol.com/hw#partnome.type'|'test.archol.com/hw#nomes.doc'|'test.archol.com/hw#askAndShowName.proc'
+  declare type IMappingshw = {
+    [uri in IMappinghw]?:string
+  } 
 
   declare function declarePackage (ns: 'test.archol.com', path: 'hw'): Itest_archol_com_hwUses
   declare interface Itest_archol_com_hwUses {
@@ -319,9 +325,9 @@ declare type Itest_archol_com_hwTaskaskAndShowName =
 
     declare interface Itest_archol_com_hwTOPTpartnome {
       base: BasicTypes
-      validate? (val: string): string|false
-      format? (val: string): string
-      parse? (str: string): string
+      validate? (this: void, val: string): string|false
+      format? (this: void, val: string): string
+      parse? (this: void, str: string): string
     }
     
 
@@ -349,6 +355,10 @@ declare type Itest_archol_com_hwTaskaskAndShowName =
     }
     
     declare type Itest_archol_com_hwSTATENAMESnomes = "partial"|"complete"
+    declare interface Itest_archol_com_hwDOCDATAnomes {
+      fname: string
+      lname: string
+    }
     declare interface Itest_archol_com_hwDOCACTIONSnomes {
 
         startHw: {
@@ -356,7 +366,7 @@ declare type Itest_archol_com_hwTaskaskAndShowName =
           to: Itest_archol_com_hwSTATENAMESnomes|Itest_archol_com_hwSTATENAMESnomes[],
           icon: Icon,
           description: I18N,
-          run (fn: string): Promise<any>
+          run (this: Itest_archol_com_hwDOCDATAnomes, fn: string): Promise<any>
         }
       
 
@@ -365,7 +375,7 @@ declare type Itest_archol_com_hwTaskaskAndShowName =
           to: Itest_archol_com_hwSTATENAMESnomes|Itest_archol_com_hwSTATENAMESnomes[],
           icon: Icon,
           description: I18N,
-          run (fn: string): Promise<any>
+          run (this: Itest_archol_com_hwDOCDATAnomes, fn: string): Promise<any>
         }
       
 }

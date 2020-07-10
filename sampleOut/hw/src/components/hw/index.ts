@@ -3,30 +3,31 @@ export const identificationGUID: DocIdentification = {
   gen: 'TODO'
 }
 
-export const test_archol_com_hw_t_partnome = {
-  tId: 'test.archol.com/hw/partnome',
+export const partnomeType = {
+  tId: 'partnomeType',
+  uri: 'test.archol.com/hw#partnome',
   base: 'string',
   validate(this: void,val:string): false | "parte de nome inválida" {
     if(! /^\w+/g.test(val)) return 'parte de nome inválida'
     return false
   }
 }
-export const allTypes: Type[] = [test_archol_com_hw_t_partnome]
+export const allTypes: Type[] = [partnomeType]
 
-export interface Itest_archol_com_hw_d_nomes {
+export interface InomesDoc {
   fname: string
   lname: string
 }
-export const test_archol_com_hw_d_nomes = (()=> {
+export const nomesDoc = (()=> {
   const ffname = {
     name: 'fname',
     primary: true,
-    type: test_archol_com_hw_t_partnome,
+    type: partnomeType,
   }
   const flname = {
     name: 'lname',
     primary: true,
-    type: test_archol_com_hw_t_partnome,
+    type: partnomeType,
   }
   const spartial = {
     name: 'partial',
@@ -43,7 +44,8 @@ export const test_archol_com_hw_d_nomes = (()=> {
     },
   }
   return {
-    dId: 'test.archol.com/hw/nomes',
+    dId: 'nomesDoc',
+    uri: 'test.archol.com/hw/nomes',
     identification: identificationGUID,
     volatile: true,
     states: [spartial,scomplete],
@@ -79,7 +81,7 @@ export const test_archol_com_hw_d_nomes = (()=> {
         description: {
           pt: () => 'Iniciar novo',
         },
-        async run(this: Itest_archol_com_hw_d_nomes,fn:string): Promise<void> {
+        async run(this: InomesDoc,fn:string): Promise<void> {
           this.fname=fn
         }
       },
@@ -91,17 +93,18 @@ export const test_archol_com_hw_d_nomes = (()=> {
         description: {
           pt: () => 'Completar',
         },
-        async run(this: Itest_archol_com_hw_d_nomes,ln:string): Promise<void> {
+        async run(this: InomesDoc,ln:string): Promise<void> {
           this.lname = ln
         }
       },
     ],
   }
 })()
-export const allDocuments: Document[] = [test_archol_com_hw_d_nomes]
+export const allDocuments: Document[] = [nomesDoc]
 
-export const test_archol_com_hw_p_askAndShowName = {
-  pId: 'test.archol.com/hw/askAndShowName',
+export const askAndShowNameProc = {
+  pId: 'askAndShowNameProc',
+  uri: 'test.archol.com/hw#askAndShowName',
   title: {
     pt: () => 'Olá mundo',
   },
@@ -111,4 +114,4 @@ export const test_archol_com_hw_p_askAndShowName = {
   icon: 'scholl',
   volatile: true,
 }
-export const allProcesses: Process[] = [test_archol_com_hw_p_askAndShowName]
+export const allProcesses: Process[] = [askAndShowNameProc]

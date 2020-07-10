@@ -5,7 +5,7 @@ import { fail } from 'assert';
 
 export const quasarMongo: BuilderImpl = {
   async buildApp (ws, app, info) {
-    const appDir = join(ws.rootDir, info.config.rootDir, '/src/components/archol')
+    const appDir = join(ws.rootDir, info.config.rootDir, '/src/components/' + app.name)
     const w = createSourceWriter(appDir + '/index.ts')
     w.writeln('import { Type, Document, Process, DocIdentification } from \'../archollib\'')
 
@@ -66,9 +66,10 @@ export const quasarMongo: BuilderImpl = {
       function saveProcesses () {
         w.writeln('')
         for (const p of pkg.processes) {
-          w.writeln('export const ' + pkg.uri.id + '_p_' + p.name + ' = {')
+          w.writeln('export const ' + p.getId(app) + ' = {')
           w.ident()
-          w.writeln('pId: \'' + pkg.uri.full + '/' + p.name + '\',')
+          w.writeln('pId: \'' + p.getId(app) + '\',')
+          w.writeln('uri: \'' + pkg.uri.full + '#' + p.name + '\',')
           saveI18N(p, 'title', false)
           saveI18N(p, 'caption', false)
           w.writeln('icon: \'' + p.icon + '\',')
@@ -76,15 +77,16 @@ export const quasarMongo: BuilderImpl = {
           w.identBack()
           w.writeln('}')
         }
-        w.writeln('export const allProcesses: Process[] = [' + pkg.processes.map((p) => pkg.uri.id + '_p_' + p.name).join(',') + ']')
+        w.writeln('export const allProcesses: Process[] = [' + pkg.processes.map((p) => p.getId(app)).join(',') + ']')
       }
 
       function saveTypes () {
         w.writeln('')
         for (const t of pkg.types) {
-          w.writeln('export const ' + pkg.uri.id + '_t_' + t.name + ' = {')
+          w.writeln('export const ' + t.getId(app) + ' = {')
           w.ident()
-          w.writeln('tId: \'' + pkg.uri.full + '/' + t.name + '\',')
+          w.writeln('tId: \'' + t.getId(app) + '\',')
+          w.writeln('uri: \'' + pkg.uri.full + '#' + t.name + '\',')
           w.writeln('base: \'' + t.base + '\',')
 
           saveAST(t, 'void', 'validate')
@@ -94,25 +96,25 @@ export const quasarMongo: BuilderImpl = {
           w.identBack()
           w.writeln('}')
         }
-        w.writeln('export const allTypes: Type[] = [' + pkg.types.map((t) => pkg.uri.id + '_t_' + t.name).join(',') + ']')
+        w.writeln('export const allTypes: Type[] = [' + pkg.types.map((t) => t.getId(app)).join(',') + ']')
       }
 
       function saveDocs () {
         w.writeln('')
         for (const d of pkg.documents) {
-          w.writeln('export interface I' + pkg.uri.id + '_d_' + d.name + ' {')
+          w.writeln('export interface I' + d.getId(app) + ' {')
           w.ident()
           d.fields.forEach((f) => w.writeln(f.name + ': ' + f.type.base))
           w.identBack()
           w.writeln('}')
-          w.writeln('export const ' + pkg.uri.id + '_d_' + d.name + ' = (()=> {')
+          w.writeln('export const ' + d.getId(app) + ' = (()=> {')
           w.ident()
           d.fields.forEach((f) => {
             w.writeln('const f' + f.name + ' = {')
             w.ident()
             w.writeln('name: \'' + f.name + '\',')
             w.writeln('primary: ' + vboolean(f.primary) + ',')
-            w.writeln('type: ' + pkg.uri.id + '_t_' + f.type.name + ',')
+            w.writeln('type: ' + f.type.getId(app) + ',')
             w.identBack()
             w.writeln('}')
           })
@@ -127,7 +129,8 @@ export const quasarMongo: BuilderImpl = {
           })
           w.writeln('return {')
           w.ident()
-          w.writeln('dId: \'' + pkg.uri.full + '/' + d.name + '\',')
+          w.writeln('dId: \'' + d.getId(app) + '\',')
+          w.writeln('uri: \'' + pkg.uri.full + '/' + d.name + '\',')
           w.writeln('identification: identification' + d.identification + ',')
           w.writeln('volatile: ' + vboolean(d.persistence === 'session') + ',')
           w.writeln('states: [' + d.states.map((st) => 's' + st.name).join(',') + '],')
@@ -169,7 +172,7 @@ export const quasarMongo: BuilderImpl = {
               w.writeln('to: [' + a.to.map((asn) => 's' + asn.name).join() + '],')
             w.writeln('icon: \'' + a.icon + '\',')
             saveI18N(a, "description", false)
-            saveAST(a, 'I' + pkg.uri.id + '_d_' + d.name, 'run')
+            saveAST(a, 'I' + d.getId(app), 'run')
             w.identBack()
             w.writeln('},')
           })
@@ -181,7 +184,7 @@ export const quasarMongo: BuilderImpl = {
           w.identBack()
           w.writeln('})()')
         }
-        w.writeln('export const allDocuments: Document[] = [' + pkg.documents.map((d) => pkg.uri.id + '_d_' + d.name).join(',') + ']')
+        w.writeln('export const allDocuments: Document[] = [' + pkg.documents.map((d) => d.getId(app)).join(',') + ']')
       }
     }
   }

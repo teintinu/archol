@@ -14,7 +14,7 @@ export function loadWorkspace (ws: def.Workspace) {
 
   const apps: { [appName: string]: decl.Application } = {}
   const pkgs: { [pkgUri in decl.PackageURI]: decl.Package } = {} as any
-  const ret: def.DefWorkspace = { ...ws, apps, pkgs }
+  const ret: def.DefWorkspace = { ...ws, decl: { apps, pkgs }, def: { apps: {} } }
 
   const decl = new Project({
     tsConfigFilePath: ws.rootDir + '/tsconfig.json'
@@ -22,9 +22,6 @@ export function loadWorkspace (ws: def.Workspace) {
 
   parseSources()
 
-  // const declx = await readFile(ws.tempDir + '/ws.js', { encoding: 'utf-8' })
-  // const fn = new Function('declareApp', 'declarePackage', decl)
-  // fn(declareApp, declarePackage)
   return ret
 
   function parseSources () {

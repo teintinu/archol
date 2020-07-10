@@ -4,6 +4,7 @@ import { type } from "os"
 
 export interface Type {
   tId: string,
+  uri: string,
   base: string,
   validate?(val: any): false | string
   format?(val: any): string
@@ -11,6 +12,7 @@ export interface Type {
 }
 export interface Process {
   pId: string,
+  uri: string,
   title: I18N,
   caption: I18N,
   icon: string,
@@ -51,6 +53,7 @@ export interface DocIdentification {
 
 export interface Document {
   dId: string,
+  uri: string,
   volatile: boolean,
   fields: DocumentField[],
   identification: DocIdentification

@@ -275,9 +275,9 @@ ${viewfields.decl.join('\n')}
     lines = lines.concat(`
     declare interface I${pkg.uri.id}TOPT${typename} {
       base: BasicTypes
-      validate? (val: ${tp.base}): string|false
-      format? (val: ${tp.base}): string
-      parse? (str: string): ${tp.base}
+      validate? (this: void, val: ${tp.base}): string|false
+      format? (this: void, val: ${tp.base}): string
+      parse? (this: void, str: string): ${tp.base}
     }
     `.split('\n'))
   }
@@ -316,6 +316,18 @@ ${docStateDecl}
     }
     `.split('\n'))
     lines.push(`    declare type I${pkg.uri.id}STATENAMES${docname} = ${docstatesnames.map((s) => '"' + s + '"').join('|')}`)
+
+    lines.push(`    declare interface I${pkg.uri.id}DOCDATA${docname} {`)
+    pfieldsnames.map((fn) =>{
+      const f=doc.primaryFields[fn]
+      lines.push(`      `+fn+': '+basetype(f.type))
+    })
+    sfieldsnames.map((fn) =>{
+      const f=doc.secondaryFields[fn]
+      lines.push(`      `+fn+': '+basetype(f.type))
+    })
+    lines.push(`    }`)
+
     lines.push(`    declare interface I${pkg.uri.id}DOCACTIONS${docname} {`)
     for (const docactionname of docactionsnames) {
       lines = lines.concat(`
@@ -324,7 +336,7 @@ ${docStateDecl}
           to: I${pkg.uri.id}STATENAMES${docname}|I${pkg.uri.id}STATENAMES${docname}[],
           icon: Icon,
           description: I18N,
-          run (fn: string): Promise<any>
+          run (this: I${pkg.uri.id}DOCDATA${docname}, fn: string): Promise<any>
         }
       `.split('\n'))
     }

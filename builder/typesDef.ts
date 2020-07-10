@@ -1,6 +1,7 @@
 import * as decl from './typesDecl'
 import { FunctionDeclaration, MethodDeclaration } from 'ts-morph'
 import '@hoda5/extensions'
+import { defaultTypes } from './defaults'
 
 export interface Application {
   name: string
@@ -15,6 +16,11 @@ export interface Application {
   roles: Role[]
   langs: Lang[]
   builders: BuilderInfo[]
+  mappings: AppMappings
+}
+
+export interface AppMappings {
+  [uri: string]: string
 }
 
 export type Icon = string
@@ -38,10 +44,11 @@ export interface PackageUses {
 
 export interface Package {
   uri: {
-    id: string
+    alias?: string
     full: PackageURI
     ns: string
     path: string
+    mappables: string[]
   },
   redefines?: Package
   uses: PackageUses,
@@ -63,7 +70,12 @@ export interface Role {
   icon: Icon
 }
 
-export interface Type {
+export interface Mappable {
+  uri: string
+  getId (app: Application): string
+}
+
+export interface Type extends Mappable {
   name: string
   base: "string" | "number" | "boolean" | "date"
   validate: Ast | false
@@ -95,7 +107,7 @@ export interface DocumentAction {
   run: Ast | false
 }
 
-export interface Document {
+export interface Document extends Mappable {
   name: string
   identification: 'GUID'
   fields: DocField[]
@@ -116,7 +128,7 @@ export interface DocIndex {
   fields: DocIndexField[]
 }
 
-export interface Process {
+export interface Process extends Mappable {
   name: string
   start: UseTask
   icon: string
@@ -205,8 +217,13 @@ export interface Ast {
 }
 
 export interface DefWorkspace extends Workspace {
-  apps: { [appName: string]: decl.Application },
-  pkgs: { [pkgUri in decl.PackageURI]: decl.Package },
+  decl: {
+    apps: { [appName: string]: decl.Application },
+    pkgs: { [pkgUri in decl.PackageURI]: decl.Package },
+  },
+  def: {
+    apps: { [appName: string]: Promise<Application> },
+  }
 }
 
 export interface Workspace {
@@ -232,16 +249,21 @@ export interface BuilderConfig {
   rootDir: string
 }
 
-export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang) {
+export async function getAppDef (ws: DefWorkspace, appname: string, onlyLang?: Lang) {
+  return ws.def.apps[appname] || (ws.def.apps[appname] = defApp(ws, appname, onlyLang))
+}
+
+async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang) {
 
   const pPackages: { [uri in decl.PackageURI]: () => Promise<Package> } = {} as any
 
-  const declApp: decl.Application = await ws.apps[appname]
+  const declApp: decl.Application = ws.decl.apps[appname]
   if (!declApp) throw new Error('invalid app name ' + appname)
 
   const defLang = declApp.langs[0]
   const appLangs = declApp.langs
   const appPackageList: Package[] = []
+  const appMappings: AppMappings = {}
   const appUses = await vusePackages(declApp.uses);
   const appPackages: { [uri in PackageURI]: Package } = {} as any
   await Promise.all(Object.keys(pPackages).map(async (pkguri) => {
@@ -258,7 +280,8 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     roles: allroles(),
     lang: defLang,
     langs: appLangs,
-    builders: await vbuilders()
+    builders: await vbuilders(),
+    mappings: appMappings
   }
   return def
 
@@ -321,11 +344,11 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
   async function vusePackages (uses: decl.PackageUses): Promise<PackageUses> {
     const ret: PackageUses = {}
     const aliases: PackageURI[] = Object.keys(uses) as any
-    for (const alias of aliases) {
+    await Promise.all(aliases.map(async (alias) => {
       const uri = uses[alias]
       const pkg = await vusePackage(uri)
       ret[alias] = pkg
-    }
+    }))
     return ret
   }
 
@@ -334,13 +357,13 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
   }
 
   async function vusePackage (pkguri: decl.PackageURI): Promise<Package> {
-    const declPkg = ws.pkgs[pkguri]
+    const declPkg = ws.decl.pkgs[pkguri]
     if (!declPkg) throw new Error('invalid package ' + pkguri)
 
     const ppkg = pPackages[pkguri]
     if (ppkg) return ppkg()
 
-    const uri = declPkg.uri
+    const uri = { ...declPkg.uri, mappables: [] }
 
     const pkg: Package = { uri } as any
     pPackages[pkguri] = async () => pkg
@@ -400,6 +423,23 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
       })
     }
 
+    function vmappable (n: string): Mappable {
+      const uri = pkg.uri.full + '#' + n
+      if (pkg.uri.mappables.indexOf(uri) >= 0) fail(pkg, 'duplicate ' + n)
+      pkg.uri.mappables.push(uri)
+      const m = declApp.mappings[uri]
+      if (m) appMappings[uri] = m
+      return {
+        uri,
+        getId: getMappedId
+      }
+    }
+
+    function getMappedId (this: Mappable, app: Application): string {
+      const id = appMappings[this.uri]
+      return id || 'UNMAPPED_ID(\'' + this.uri + '\')'
+    }
+
     async function vtypes (types: decl.Types) {
       let ret: Type[] = []
       if (types) ret = Object.keys(types).map((n) => {
@@ -410,6 +450,7 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
           validate: d.validate,
           parse: d.parse,
           format: d.format,
+          ...vmappable(n + '.type')
         }
         return t
       })
@@ -439,7 +480,8 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
         tasks: procTasks,
         vars: procVars,
         roles: vrolesuse(declProc, 'roles'),
-        volatile: declProc.volatile
+        volatile: declProc.volatile,
+        ...vmappable(procName + '.proc')
       }
       return ret
 
@@ -539,13 +581,7 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
     }
 
     async function findtype (type: string): Promise<Type> {
-      if (type === 'string') return {
-        base: 'string',
-        name: 'string',
-        validate: false,
-        format: false,
-        parse: false
-      }
+      if (defaultTypes[type]) return defaultTypes[type]
       const types = await pkgtypes
       const ret = types.filter((t) => t.name === type)[0]
       if (!ret) fail(declPkg, 'invalid type: ' + type)
@@ -708,6 +744,7 @@ export async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang
         states: await docStates,
         actions: await vdocactions(d.actions),
         indexes: await vdocindexes(d.indexes, primaryFields, secondaryFields),
+        ...vmappable(dn + '.doc')
       }
       return ret
 

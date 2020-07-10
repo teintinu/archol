@@ -1,4 +1,4 @@
-import { Workspace, defApp } from "./typesDef";
+import { Workspace, getAppDef } from "./typesDef";
 import { resolve, join } from 'path'
 import { buildApp } from './buildApp';
 import { quasarMongo } from './quasar-mongo';
@@ -16,12 +16,9 @@ const ws: Workspace = {
 }
 
 async function build_ws () {
-  const loadedWS = await loadWorkspace(ws)
-  const hw = await defApp(loadedWS, 'hw', 'pt')
-  return Promise.all([
-    await wsDecl(loadedWS),
-    await buildApp(loadedWS, hw, 'pt')
-  ])
+  const loadedWS = loadWorkspace(ws)
+  const hw = await getAppDef(loadedWS, 'hw', 'pt')
+  await buildApp(loadedWS, hw, 'pt')
 }
 
 build_ws().then(() => console.log('built'), (e)=>{

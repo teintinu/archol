@@ -12,6 +12,11 @@ export interface Application {
   builders: {
     [builderName: string]: BuilderConfig
   }
+  mappings: AppMappings
+}
+
+export interface AppMappings {
+  [uri: string]: string
 }
 
 export type Icon = string
