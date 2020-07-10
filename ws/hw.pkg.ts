@@ -179,7 +179,7 @@ declarePackage('test.archol.com', 'hw')
     partnome: {
       base: 'string',
       validate (val) {
-        if(! /^\w+/g.test(val)) return 'parte de nome inválida'
+        if (! /^\w+/g.test(val)) return 'parte de nome inválida'
         return false
       }
     }
@@ -217,9 +217,9 @@ declarePackage('test.archol.com', 'hw')
         startHw: {
           to: 'partial',
           icon: 'novo',
-          description: 'Iniciar novo',
+          description: `Iniciar novo`,
           async run (fn: string) {
-             this.fname=fn
+            this.fname = fn
           }
         },
         finishHw: {
@@ -228,7 +228,7 @@ declarePackage('test.archol.com', 'hw')
           icon: 'finish',
           description: 'Completar',
           async run (ln: string) {
-            this.lname = ln 
+            this.lname = ln
           }
         }
       }

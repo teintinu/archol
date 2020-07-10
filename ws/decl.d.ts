@@ -46,7 +46,7 @@
 
   declare interface Builders {"quasar-mongo": BuilderConfig}
 
-  declare function declareApp (name: 'hw', opts: {
+  declare function declareApplication (name: 'hw', opts: {
     description: I18N,
     icon: Icon,
     uses: PackageUses,

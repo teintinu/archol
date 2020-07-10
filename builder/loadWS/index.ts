@@ -35,8 +35,8 @@ export function loadWorkspace (ws: def.Workspace) {
           if (expr1 instanceof CallExpression) {
             tsCallExpr(expr1)
           }
-          else fail(src.getFilePath() + ' comando deveria ser uma chamada a declareApp ou declarePackage')
-        } else fail(src.getFilePath() + ' comando deveria ser declareApp ou declarePackage')
+          else fail(src.getFilePath() + ' comando deveria ser uma chamada a declareApplication ou declarePackage')
+        } else fail(src.getFilePath() + ' comando deveria ser declareApplication ou declarePackage')
       }
     })
   }
@@ -59,18 +59,18 @@ export function loadWorkspace (ws: def.Workspace) {
 
   function runFunc (fn: string, expr1: CallExpression) {
     const args = expr1.getArguments()
-    if (fn === 'declareApp') {
-      if (args.length !== 2) fail(expr1.getSourceFile().getFilePath() + ' declareApp precisa de dois parametros')
+    if (fn === 'declareApplication') {
+      if (args.length !== 2) fail(expr1.getSourceFile().getFilePath() + ' declareApplication precisa de dois parametros')
       const appname = parseStrArg(args[0])
       const appopts = parseObjArg(args[1])
-      return declareApp(appname, appopts)
+      return declareApplication(appname, appopts)
     } else if (fn === 'declarePackage') {
       if (args.length !== 2) fail(expr1.getSourceFile().getFilePath() + ' declarePackage precisa de dois parametros')
       const pkgns = parseStrArg(args[0])
       const pkgpath = parseStrArg(args[1])
       return declarePackage(pkgns, pkgpath)
     }
-    else fail(expr1.getSourceFile().getFilePath() + ' declareApp ou declarePackage era esperado')
+    else fail(expr1.getSourceFile().getFilePath() + ' declareApplication ou declarePackage era esperado')
   }
 
   function parseAnyArg (propValue: any): any {
@@ -144,7 +144,7 @@ export function loadWorkspace (ws: def.Workspace) {
     return ret
   }
 
-  function declareApp (name: string, opts: Exclude<decl.Application, 'name'>) {
+  function declareApplication (name: string, opts: Exclude<decl.Application, 'name'>) {
     if (apps[name]) throw new Error('Duplicated application name: ' + name)
     apps[name] = { ...opts, name }
     return apps[name]

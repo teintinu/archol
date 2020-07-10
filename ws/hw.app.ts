@@ -1,4 +1,4 @@
-declareApp("hw", {
+declareApplication("hw", {
   description: {
     "pt": "Olá",
     "en": "Hello"

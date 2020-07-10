@@ -57,7 +57,7 @@ export async function genapp (w: SourcePartWriter, ws: DefWorkspace, packageUrls
     const mappings = app.packageList.reduce<string[]>((ret, pkg) => ret.concat(pkg.uri.mappables), [])
     w.write(`
 
-  declare function declareApp (name: '${appname}', opts: {
+  declare function declareApplication (name: '${appname}', opts: {
     description: I18N,
     icon: Icon,
     uses: PackageUses,
