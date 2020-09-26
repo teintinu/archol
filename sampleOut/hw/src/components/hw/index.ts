@@ -8,7 +8,7 @@ export const partnomeType = {
   uri: 'test.archol.com/hw#partnome',
   base: 'string',
   validate(this: void,val:string): false | "parte de nome inválida" {
-    if(! /^\w+/g.test(val)) return 'parte de nome inválida'
+    if (! /^\w+/g.test(val)) return 'parte de nome inválida'
     return false
   }
 }
@@ -82,7 +82,7 @@ export const nomesDoc = (()=> {
           pt: () => 'Iniciar novo',
         },
         async run(this: InomesDoc,fn:string): Promise<void> {
-          this.fname=fn
+          this.fname = fn
         }
       },
       {

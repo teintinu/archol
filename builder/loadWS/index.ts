@@ -7,7 +7,7 @@ import {
   ObjectLiteralExpression, ArrayLiteralExpression,
   PropertyAssignment,
   PropertyAccessExpression,
-  MethodDeclaration
+  MethodDeclaration, NoSubstitutionTemplateLiteral
 } from 'ts-morph';
 
 export function loadWorkspace (ws: def.Workspace) {
@@ -78,6 +78,8 @@ export function loadWorkspace (ws: def.Workspace) {
     if (propValue instanceof ObjectLiteralExpression) ret = parseObjArg(propValue)
     else if (propValue instanceof ArrayLiteralExpression) ret = parseArrArg(propValue)
     else if (propValue instanceof StringLiteral) ret = parseStrArg(propValue)
+    else if (propValue instanceof NoSubstitutionTemplateLiteral) ret = parseStr2Arg(propValue)
+    //else if (propValue instanceof TaggedTemplateExpression) ret = parseStrArg(propValue)
     else if (propValue instanceof NumericLiteral) ret = parseNumArg(propValue)
     else if (propValue instanceof BooleanLiteral) ret = parseBolArg(propValue)
     else fail(propValue.getText() + ': tipo de dado não tratado')
@@ -87,6 +89,13 @@ export function loadWorkspace (ws: def.Workspace) {
   function parseStrArg (arg: Node): string {
     let ret: string = undefined as any
     if (arg instanceof StringLiteral) ret = arg.getLiteralValue()
+    else fail(arg.getSourceFile().getFilePath() + ' ' + arg.getText() + ' string é esperada')
+    return ret
+  }
+
+  function parseStr2Arg (arg: Node): string {
+    let ret: string = undefined as any
+    if (arg instanceof NoSubstitutionTemplateLiteral) ret = arg.getLiteralValue()
     else fail(arg.getSourceFile().getFilePath() + ' ' + arg.getText() + ' string é esperada')
     return ret
   }
@@ -208,6 +217,7 @@ export function loadWorkspace (ws: def.Workspace) {
 }
 
 function fail (...args: any[]): any {
+  debugger
   console.log(args)
   throw new Error(args.map((a) => a.toString()).join(' '))
 }
