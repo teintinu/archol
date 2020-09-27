@@ -9,7 +9,7 @@ declareApplication("hw", {
   },
   langs: ["pt"],
   builders: {
-    'quasar-mongo': {
+    'node-tsx-mongo': {
       "rootDir": "../sampleOut/hw"
     }
   },

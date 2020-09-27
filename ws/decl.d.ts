@@ -44,7 +44,7 @@
 
   declare type FunctionLevel = 'cpu' | 'io'| 'proc'
 
-  declare interface Builders {"quasar-mongo": BuilderConfig}
+  declare interface Builders {"node-tsx-mongo": BuilderConfig}
 
   declare function declareApplication (name: 'hw', opts: {
     description: I18N,

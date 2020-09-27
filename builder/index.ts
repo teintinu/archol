@@ -1,7 +1,7 @@
 import { Workspace, getAppDef } from "./typesDef";
 import { resolve, join } from 'path'
 import { buildApp } from './buildApp';
-import { quasarMongo } from './quasar-mongo';
+import { quasarNodeTsx } from './node-tsx';
 import { loadWorkspace } from './loadWS';
 import { wsDecl } from './wsDecl';
 
@@ -11,7 +11,7 @@ const ws: Workspace = {
   rootDir: rootDir,
   tempDir: resolve(rootDir, '../.temp'),
   builders: {
-    "quasar-mongo": quasarMongo
+    "node-tsx-mongo": quasarNodeTsx
   }
 }
 
