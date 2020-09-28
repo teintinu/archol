@@ -14,7 +14,8 @@ export const wsDecl: BuilderImpl = {
     await genapp(
       w,
       ws,
-      packageuris.map((p) => '"' + p + '"').join(','),
+      app,
+      packageuris.map((p) => '"' + p + '"'),
       Object.keys(ws.builders).map((b) => '"' + b + '": BuilderConfig').join(',')
     )
 

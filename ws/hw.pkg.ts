@@ -1,9 +1,9 @@
 declarePackage('test.archol.com', 'hw')
   .uses({})
   .roles({
-    public: {
-      description: 'Todos usuários',
-      icon: 'public'
+    teste: {
+      description: 'teste',
+      icon: 'teste'
     }
   })
   .processes({
@@ -233,4 +233,15 @@ declarePackage('test.archol.com', 'hw')
         }
       }
     }
+  })
+  .routes({
+    '/hw/{fnome}/{lname}'(pkg, fnome: string, lnome: string){
+      const instance=pkg.askAndShowName.start()
+      instance.vars.local.firstName= fnome
+      instance.vars.local.lastName = lnome
+    },
+    '/hwnew'(pkg){
+      pkg.askAndShowName.start()
+    },
+    '/hwredir': '/hw'
   })

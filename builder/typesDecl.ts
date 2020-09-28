@@ -48,6 +48,9 @@ export interface Package {
   roles: Roles
   views: Views,
   functions: Functions,
+  pagelets: Pagelets
+  routes: Routes
+  menu: Menu
 }
 
 export type Roles = {
@@ -107,7 +110,7 @@ export interface Document {
   secondaryFields: DocFields
   indexes: DocIndexes,
   persistence: 'session' | 'persistent'
-  states: DocumentStates  
+  states: DocumentStates
   actions: DocActions
 }
 
@@ -241,4 +244,26 @@ export interface Function {
 
 export interface BuilderConfig {
   rootDir: string
+}
+
+export interface Pagelets {
+  [name: string]: {
+    left?: number,
+    top?: number,
+    right?: number,
+    bottom?: number,
+    drawer?: true,
+    content?: true,
+  }
+}
+
+export interface Routes {
+  [name: string]: Function | string
+}
+
+export type Menu = Array<MenuItem | '-'>
+
+export interface MenuItem {
+  caption: I18N
+  icon: Icon
 }

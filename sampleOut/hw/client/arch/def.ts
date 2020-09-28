@@ -1,13 +1,12 @@
-import { Type, Document, Process, DocIdentification } from '../archollib'
-export const identificationGUID: DocIdentification = {
-  gen: 'TODO'
-}
+import { Type, Document, Process } from './decl'
+
+export type Role = 'teste' | 'public' | 'auth' | 'anonymous'
 
 export const partnomeType = {
   tId: 'partnomeType',
   uri: 'test.archol.com/hw#partnome',
   base: 'string',
-  validate(this: void,val:string): false | "parte de nome inválida" {
+  validate (this: void, val: string): false | "parte de nome inválida" {
     if (! /^\w+/g.test(val)) return 'parte de nome inválida'
     return false
   }
@@ -18,7 +17,7 @@ export interface InomesDoc {
   fname: string
   lname: string
 }
-export const nomesDoc = (()=> {
+export const nomesDoc = (() => {
   const ffname = {
     name: 'fname',
     primary: true,
@@ -44,12 +43,12 @@ export const nomesDoc = (()=> {
     },
   }
   return {
-    dId: 'nomesDoc',
+    dId: 'nomesDoc' as GUID,
     uri: 'test.archol.com/hw/nomes',
-    identification: identificationGUID,
+    identification: 'GUID' as GUID,
     volatile: true,
-    states: [spartial,scomplete],
-    fields: [ffname,flname],
+    states: [spartial, scomplete],
+    fields: [ffname, flname],
     indexes: [
       {
         fields: [
@@ -81,7 +80,7 @@ export const nomesDoc = (()=> {
         description: {
           pt: () => 'Iniciar novo',
         },
-        async run(this: InomesDoc,fn:string): Promise<void> {
+        async run (this: InomesDoc, fn: string): Promise<void> {
           this.fname = fn
         }
       },
@@ -93,16 +92,16 @@ export const nomesDoc = (()=> {
         description: {
           pt: () => 'Completar',
         },
-        async run(this: InomesDoc,ln:string): Promise<void> {
+        async run (this: InomesDoc, ln: string): Promise<void> {
           this.lname = ln
         }
       },
     ],
-  }
+  } as Document
 })()
 export const allDocuments: Document[] = [nomesDoc]
 
-export const askAndShowNameProc = {
+export const askAndShowNameProc: Process = {
   pId: 'askAndShowNameProc',
   uri: 'test.archol.com/hw#askAndShowName',
   title: {
@@ -113,5 +112,5 @@ export const askAndShowNameProc = {
   },
   icon: 'scholl',
   volatile: true,
-}
+} 
 export const allProcesses: Process[] = [askAndShowNameProc]

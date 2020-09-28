@@ -70,9 +70,9 @@ export const quasarNodeTsx: BuilderImpl = {
         function saveProcesses () {
           w.writeln('')
           for (const p of pkg.processes) {
-            w.writeln('export const ' + p.getId(app) + ' = {')
+            w.writeln('export const ' + p.getMappedId(app) + ' = {')
             w.ident()
-            w.writeln('pId: \'' + p.getId(app) + '\',')
+            w.writeln('pId: \'' + p.getMappedId(app) + '\',')
             w.writeln('uri: \'' + pkg.uri.full + '#' + p.name + '\',')
             saveI18N(p, 'title', false)
             saveI18N(p, 'caption', false)
@@ -81,15 +81,15 @@ export const quasarNodeTsx: BuilderImpl = {
             w.identBack()
             w.writeln('}')
           }
-          w.writeln('export const allProcesses: Process[] = [' + pkg.processes.map((p) => p.getId(app)).join(',') + ']')
+          w.writeln('export const allProcesses: Process[] = [' + pkg.processes.map((p) => p.getMappedId(app)).join(',') + ']')
         }
 
         function saveTypes () {
           w.writeln('')
           for (const t of pkg.types) {
-            w.writeln('export const ' + t.getId(app) + ' = {')
+            w.writeln('export const ' + t.getMappedId(app) + ' = {')
             w.ident()
-            w.writeln('tId: \'' + t.getId(app) + '\',')
+            w.writeln('tId: \'' + t.getMappedId(app) + '\',')
             w.writeln('uri: \'' + pkg.uri.full + '#' + t.name + '\',')
             w.writeln('base: \'' + t.base + '\',')
 
@@ -100,25 +100,25 @@ export const quasarNodeTsx: BuilderImpl = {
             w.identBack()
             w.writeln('}')
           }
-          w.writeln('export const allTypes: Type[] = [' + pkg.types.map((t) => t.getId(app)).join(',') + ']')
+          w.writeln('export const allTypes: Type[] = [' + pkg.types.map((t) => t.getMappedId(app)).join(',') + ']')
         }
 
         function saveDocs () {
           w.writeln('')
           for (const d of pkg.documents) {
-            w.writeln('export interface I' + d.getId(app) + ' {')
+            w.writeln('export interface I' + d.getMappedId(app) + ' {')
             w.ident()
             d.fields.forEach((f) => w.writeln(f.name + ': ' + f.type.base))
             w.identBack()
             w.writeln('}')
-            w.writeln('export const ' + d.getId(app) + ' = (()=> {')
+            w.writeln('export const ' + d.getMappedId(app) + ' = (()=> {')
             w.ident()
             d.fields.forEach((f) => {
               w.writeln('const f' + f.name + ' = {')
               w.ident()
               w.writeln('name: \'' + f.name + '\',')
               w.writeln('primary: ' + vboolean(f.primary) + ',')
-              w.writeln('type: ' + f.type.getId(app) + ',')
+              w.writeln('type: ' + f.type.getMappedId(app) + ',')
               w.identBack()
               w.writeln('}')
             })
@@ -133,7 +133,7 @@ export const quasarNodeTsx: BuilderImpl = {
             })
             w.writeln('return {')
             w.ident()
-            w.writeln('dId: \'' + d.getId(app) + '\',')
+            w.writeln('dId: \'' + d.getMappedId(app) + '\',')
             w.writeln('uri: \'' + pkg.uri.full + '/' + d.name + '\',')
             w.writeln('identification: identification' + d.identification + ',')
             w.writeln('volatile: ' + vboolean(d.persistence === 'session') + ',')
@@ -176,7 +176,7 @@ export const quasarNodeTsx: BuilderImpl = {
                 w.writeln('to: [' + a.to.map((asn) => 's' + asn.name).join() + '],')
               w.writeln('icon: \'' + a.icon + '\',')
               saveI18N(a, "description", false)
-              saveAST(a, 'I' + d.getId(app), 'run')
+              saveAST(a, 'I' + d.getMappedId(app), 'run')
               w.identBack()
               w.writeln('},')
             })
@@ -188,7 +188,7 @@ export const quasarNodeTsx: BuilderImpl = {
             w.identBack()
             w.writeln('})()')
           }
-          w.writeln('export const allDocuments: Document[] = [' + pkg.documents.map((d) => d.getId(app)).join(',') + ']')
+          w.writeln('export const allDocuments: Document[] = [' + pkg.documents.map((d) => d.getMappedId(app)).join(',') + ']')
         }
       }
     }

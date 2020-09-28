@@ -51,7 +51,9 @@ export function loadWorkspace (ws: def.Workspace) {
       if (objExpr instanceof CallExpression) {
         const obj = tsCallExpr(objExpr)
         const n = fnexpr.getName()
-        return obj[n](expr1)
+        const propfn = obj[n]
+        if (typeof propfn !== 'function') fail('tsCallExpr.propfn ' + objExpr.getKindName() + '->' + n)
+        return propfn(expr1)
       }
       else fail('tsCallExpr err2')
     } else fail('tsCallExpr err1')
@@ -181,6 +183,21 @@ export function loadWorkspace (ws: def.Workspace) {
       const args = expr1.getArguments()
       if (args.length !== 1) fail(expr1.getSourceFile().getFilePath() + ' roles precisa de um parametro')
       pkg.roles = parseObjArg(args[0])
+      if (pkg.roles.public) fail('Role public yet exists')
+      pkg.roles.public = {
+        description: 'public',
+        icon: 'public'
+      }
+      if (pkg.roles.auth) fail('Role auth yet exists')
+      pkg.roles.auth = {
+        description: 'auth',
+        icon: 'auth'
+      }
+      if (pkg.roles.anonymous) fail('Role anonymous yet exists')
+      pkg.roles.anonymous = {
+        description: 'anonymous',
+        icon: 'anonymous'
+      }
       return { processes }
     }
     function processes (expr1: CallExpression) {
@@ -211,7 +228,13 @@ export function loadWorkspace (ws: def.Workspace) {
       const args = expr1.getArguments()
       if (args.length !== 1) fail(expr1.getSourceFile().getFilePath() + ' documents precisa de um parametro')
       pkg.documents = parseObjArg(args[0])
-      return {}
+      return { routes }
+    }
+    function routes (expr1: CallExpression) {
+      const args = expr1.getArguments()
+      if (args.length !== 1) fail(expr1.getSourceFile().getFilePath() + ' routes precisa de um parametro')
+      pkg.routes = parseObjArg(args[0])
+      return { }      
     }
   }
 }

@@ -9,8 +9,8 @@ export const defaultTypes: {
     validate: false,
     format: false,
     parse: false,
-    uri: 'string',
-    getId () {
+    mappableUri: 'string',
+    getMappedId () {
       return ''
     }
   }

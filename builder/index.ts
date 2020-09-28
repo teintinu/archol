@@ -5,7 +5,7 @@ import { quasarNodeTsx } from './node-tsx';
 import { loadWorkspace } from './loadWS';
 import { wsDecl } from './wsDecl';
 
-const rootDir = resolve(__dirname + '../../../../ws')
+const rootDir = resolve(join(__dirname , '../ws'))
 
 const ws: Workspace = {
   rootDir: rootDir,
@@ -14,7 +14,7 @@ const ws: Workspace = {
     "node-tsx-mongo": quasarNodeTsx
   }
 }
-
+ 
 async function build_ws () {
   const loadedWS = loadWorkspace(ws)
   const hw = await getAppDef(loadedWS, 'hw', 'pt')

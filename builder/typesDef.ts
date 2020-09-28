@@ -36,6 +36,7 @@ export interface I18NP {
 
 export type Lang = 'pt' | 'en'
 
+export type PackageID = '$PackageID'
 export type PackageURI = '$PackageURI'
 
 export interface PackageUses {
@@ -44,7 +45,8 @@ export interface PackageUses {
 
 export interface Package {
   uri: {
-    alias?: string
+    //alias?: string
+    id: PackageID
     full: PackageURI
     ns: string
     path: string
@@ -71,8 +73,8 @@ export interface Role {
 }
 
 export interface Mappable {
-  uri: string
-  getId (app: Application): string
+  mappableUri: string
+  getMappedId (app: Application): string
 }
 
 export interface Type extends Mappable {
@@ -366,6 +368,7 @@ async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang) {
     const uri = { ...declPkg.uri, mappables: [] }
 
     const pkg: Package = { uri } as any
+
     pPackages[pkguri] = async () => pkg
 
     const pkgRoles = vpkgroles()
@@ -424,20 +427,7 @@ async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang) {
     }
 
     function vmappable (n: string): Mappable {
-      const uri = pkg.uri.full + '#' + n
-      if (pkg.uri.mappables.indexOf(uri) >= 0) fail(pkg, 'duplicate ' + n)
-      pkg.uri.mappables.push(uri)
-      const m = declApp.mappings[uri]
-      if (m) appMappings[uri] = m
-      return {
-        uri,
-        getId: getMappedId
-      }
-    }
-
-    function getMappedId (this: Mappable, app: Application): string {
-      const id = appMappings[this.uri]
-      return id || 'UNMAPPED_ID(\'' + this.uri + '\')'
+      return vmappablePkg(pkg, n)
     }
 
     async function vtypes (types: decl.Types) {
@@ -815,5 +805,22 @@ async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang) {
     function vast (obj: any, source: false | decl.Ast): Ast {
       return source as any
     }
+  }
+
+  function vmappablePkg (pkg: Package, n: string): Mappable {
+    const uri = pkg.uri.full + '#' + n
+    if (pkg.uri.mappables.indexOf(uri) >= 0) fail(pkg, 'duplicate ' + n)
+    pkg.uri.mappables.push(uri)
+    const m = declApp.mappings[uri]
+    if (m) appMappings[uri] = m
+    return {
+      mappableUri: uri,
+      getMappedId: getMappedId
+    }
+  }
+
+  function getMappedId (this: Mappable, app: Application): string {
+    const id = appMappings[this.mappableUri]
+    return id || 'UNMAPPED_ID(\'' + this.mappableUri + '\')'
   }
 }
