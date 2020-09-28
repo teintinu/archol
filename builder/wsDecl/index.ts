@@ -19,10 +19,17 @@ export const wsDecl: BuilderImpl = {
       Object.keys(ws.builders).map((b) => '"' + b + '": BuilderConfig').join(',')
     )
 
-    for (const packagename of packageuris) {
-      const pkg = ws.decl.pkgs[packagename]
+    for (const pkguri of packageuris) {
+      const pkg = ws.decl.pkgs[pkguri]
       await genpkg(w, pkg)
     }
+
+    const maps: string[] = []
+    Object.keys(app.mappings).forEach((muri) => {
+      const mstr = app.mappings[muri]
+      if (maps.indexOf(mstr) >= -1) app.archErrors['Mapeamento duplicado: ' + mstr] = true
+      maps.push(mstr)
+    })
 
     await w.save()
   }

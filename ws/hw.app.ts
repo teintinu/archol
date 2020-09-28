@@ -33,6 +33,20 @@ declareApplication("hw", {
       instance.vars.local.lastName = lnome
     },
   },
+  roles: {
+    public: {
+      description: 'Público',
+      icon: 'public'
+    },
+    anonymous: {
+      description: 'Anônimo',
+      icon: 'anonymous'
+    },
+    authenticated: {
+      description: 'Autenticado',
+      icon: 'authenticated'
+    },
+  },
   // menu: [
   //   {
   //     caption: 'new',
@@ -42,6 +56,6 @@ declareApplication("hw", {
   mappings: {
     "test.archol.com/hw#askAndShowName.proc": 'askAndShowNameProc',
     "test.archol.com/hw#nomes.doc": 'nomesDoc',
-    "test.archol.com/hw#partnome.type": 'partnomeType'
+    "test.archol.com/hw#partnome.type": 'partnomeType',
   }
 })

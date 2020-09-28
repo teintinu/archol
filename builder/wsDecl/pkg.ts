@@ -1,4 +1,4 @@
-import { Package, basicTypes, View, Widget } from '../typesDecl';
+import { Package, basicTypes, View, Widget, defaultRoles } from '../typesDecl';
 import { SourcePartWriter } from '../sys';
 
 export async function genpkg (w: SourcePartWriter, pkg: Package) {
@@ -38,10 +38,10 @@ export async function genpkg (w: SourcePartWriter, pkg: Package) {
     return `      ${docname}: I${pkg.uri.id}DOPT${docname},`
   }).join('\n')
 
-  const rolesnames = Object.keys(pkg.roles || {})
-  const rolesDecl = rolesnames.map((r) => {
-    return '"' + r + '"'
-  }).join('|')
+  const rolesnames = Object.keys(pkg.roles || {}).concat()
+  const rolesDecl = defaultRoles.
+    concat(rolesnames).map((rn) => '"' + rn + '"')
+    .join(' | ')
 
   w.writeln(`declare interface ${pkg.uri.id}$Ref {`)
   w.ident()

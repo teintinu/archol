@@ -12,7 +12,7 @@ export interface SourcePartWriter {
   identBack (): void;
   write (...s: string[]): void;
   writeln (...s: string[]): void;
-  writelines (lines: string[]): void;
+  writelines (lines: string[], idented?: boolean): void;
   getText (): string;
   getIdent (): string;
 }
@@ -59,8 +59,10 @@ export function createSourcePartWriter (ident: string): SourcePartWriter {
       txt.push('\n')
       empty = true
     },
-    writelines (lines: string[]): void {
+    writelines (lines: string[], idented?: boolean): void {
+      if (idented) self.ident()
       lines.forEach((s) => self.writeln(s))
+      if (idented) self.identBack()
     },
     getText () {
       return txt.join('')

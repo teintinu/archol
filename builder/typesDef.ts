@@ -17,6 +17,10 @@ export interface Application {
   langs: Lang[]
   builders: BuilderInfo[]
   mappings: AppMappings
+  archErrors: {
+    [errid: string]: true
+  }
+  getMapped (uri: string): string
 }
 
 export interface AppMappings {
@@ -45,7 +49,6 @@ export interface PackageUses {
 
 export interface Package {
   uri: {
-    //alias?: string
     id: PackageID
     full: PackageURI
     ns: string
@@ -66,7 +69,7 @@ export type Roles = {
   [typeName: string]: Role
 }
 
-export interface Role {
+export interface Role extends Mappable {
   name: string
   description: I18N,
   icon: Icon
@@ -265,7 +268,6 @@ async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang) {
   const defLang = declApp.langs[0]
   const appLangs = declApp.langs
   const appPackageList: Package[] = []
-  const appMappings: AppMappings = {}
   const appUses = await vusePackages(declApp.uses);
   const appPackages: { [uri in PackageURI]: Package } = {} as any
   await Promise.all(Object.keys(pPackages).map(async (pkguri) => {
@@ -283,7 +285,9 @@ async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang) {
     lang: defLang,
     langs: appLangs,
     builders: await vbuilders(),
-    mappings: appMappings
+    mappings: declApp.mappings,
+    getMapped: declApp.getMapped,
+    archErrors: declApp.archErrors
   }
   return def
 
@@ -408,7 +412,8 @@ async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang) {
         const r: Role = {
           name: rolename,
           description: vi18n(role, 'description'),
-          icon: role.icon
+          icon: role.icon,
+          ...vmappable(rolename + '.role')
         }
         ret.push(r)
       })
@@ -420,7 +425,7 @@ async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang) {
       if (!roles) fail(obj, 'roles não foi definido')
       if (typeof roles === 'string') roles = [roles]
       return roles.map((r) => {
-        if (!pkgRoles.some((pr) => pr.name === r))
+        if (!decl.defaultRoles.concat(pkgRoles.map((r) => r.name)).some((rn) => rn === r))
           fail(obj, 'invalid role: ' + r)
         return r
       })
@@ -812,15 +817,14 @@ async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang) {
     if (pkg.uri.mappables.indexOf(uri) >= 0) fail(pkg, 'duplicate ' + n)
     pkg.uri.mappables.push(uri)
     const m = declApp.mappings[uri]
-    if (m) appMappings[uri] = m
+    if (!m) declApp.archErrors[uri + ' não mapeado'] = true
     return {
       mappableUri: uri,
-      getMappedId: getMappedId
+      getMappedId: getMappedIdForThis
     }
   }
 
-  function getMappedId (this: Mappable, app: Application): string {
-    const id = appMappings[this.mappableUri]
-    return id || 'UNMAPPED_ID(\'' + this.mappableUri + '\')'
+  function getMappedIdForThis (this: Mappable, app: Application): string {
+    return app.getMapped(this.mappableUri)
   }
 }

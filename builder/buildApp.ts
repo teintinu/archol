@@ -16,4 +16,10 @@ export async function buildApp (ws: DefWorkspace, app: Application, onlyLang?: L
       console.log(new Date().toISOString(), ' ', builderInfo.builderName + ': built ' + builderInfo.builderName)
     } else console.log(new Date().toISOString(), ' ', builderInfo.builderName + ': invalid builder: ' + builderInfo.builderName)
   }))
+
+  if (app.archErrors.length) {
+    console.log('')
+    console.log('ERROS:')
+    Object.keys(app.archErrors).forEach((errId) => console.log(errId))
+  }
 }

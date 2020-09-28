@@ -1,4 +1,4 @@
-import { basicTypes } from '../typesDecl';
+import { basicTypes, defaultRoles } from '../typesDecl';
 import { SourcePartWriter } from '../sys';
 import { Application, DefWorkspace, getAppDef } from '../typesDef';
 
@@ -21,7 +21,7 @@ export async function genapp (w: SourcePartWriter, ws: DefWorkspace, app: Applic
   declare type Roles = {
     [typeName: string]: Role
   }
-  
+    
   declare interface Role {
     description: I18N,
     icon: Icon
@@ -71,6 +71,9 @@ declare function declareApplication (name: '${appname}', opts: {
   routes: {
     [name: string]: AppRoute | PackageNames
   }
+  roles: {`)
+    w.writelines(defaultRoles.map((r) => '  '+r + ": Omit<Role, 'name'>,"), true)
+    w.writeln(`  }
   mappings: IMappings${appname}
 }): void
 

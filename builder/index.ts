@@ -5,7 +5,7 @@ import { quasarNodeTsx } from './node-tsx';
 import { loadWorkspace } from './loadWS';
 import { wsDecl } from './wsDecl';
 
-const rootDir = resolve(join(__dirname , '../ws'))
+const rootDir = process.argv[2]
 
 const ws: Workspace = {
   rootDir: rootDir,

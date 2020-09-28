@@ -13,6 +13,10 @@ export interface Application {
     [builderName: string]: BuilderConfig
   }
   mappings: AppMappings
+  getMapped (uri: string): string
+  archErrors: {
+    [errid: string]: true
+  }
 }
 
 export interface AppMappings {
@@ -267,3 +271,5 @@ export interface MenuItem {
   caption: I18N
   icon: Icon
 }
+
+export const defaultRoles: string[] = ['public', 'anonymous', 'authenticated']

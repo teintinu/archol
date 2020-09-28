@@ -16,7 +16,7 @@ export function loadWorkspace (ws: def.Workspace) {
   const pkgs: { [pkgUri in decl.PackageURI]: decl.Package } = {} as any
   const ret: def.DefWorkspace = { ...ws, decl: { apps, pkgs }, def: { apps: {} } }
 
-  const decl = new Project({
+  const declPrj = new Project({
     tsConfigFilePath: ws.rootDir + '/tsconfig.json'
   })
 
@@ -25,7 +25,7 @@ export function loadWorkspace (ws: def.Workspace) {
   return ret
 
   function parseSources () {
-    decl.getSourceFiles().forEach((src) => {
+    declPrj.getSourceFiles().forEach((src) => {
       if (src.getBaseName() !== 'decl.d.ts') {
         const stmts = src.getStatements();
         if (stmts.length != 1) fail(src.getFilePath() + ' só deveria ter uma declaração')
@@ -155,9 +155,20 @@ export function loadWorkspace (ws: def.Workspace) {
     return ret
   }
 
-  function declareApplication (name: string, opts: Exclude<decl.Application, 'name'>) {
+  function declareApplication (name: string,
+    opts: Exclude<Exclude<Exclude<decl.Application, 'name'>, 'getMapped'>, 'archErrors'>
+  ) {
     if (apps[name]) throw new Error('Duplicated application name: ' + name)
-    apps[name] = { ...opts, name }
+    const app: decl.Application = apps[name] = {
+      ...opts, name,
+      archErrors: {},
+      getMapped (uri: string) {
+        const id = app.mappings[uri]
+        if (id) return id
+        app.archErrors[uri + ' não mapeado'] = true
+        return id || 'UNMAPPED_ID(\'' + uri + '\')'
+      }
+    }
     return apps[name]
   }
 
@@ -183,21 +194,9 @@ export function loadWorkspace (ws: def.Workspace) {
       const args = expr1.getArguments()
       if (args.length !== 1) fail(expr1.getSourceFile().getFilePath() + ' roles precisa de um parametro')
       pkg.roles = parseObjArg(args[0])
-      if (pkg.roles.public) fail('Role public yet exists')
-      pkg.roles.public = {
-        description: 'public',
-        icon: 'public'
-      }
-      if (pkg.roles.auth) fail('Role auth yet exists')
-      pkg.roles.auth = {
-        description: 'auth',
-        icon: 'auth'
-      }
-      if (pkg.roles.anonymous) fail('Role anonymous yet exists')
-      pkg.roles.anonymous = {
-        description: 'anonymous',
-        icon: 'anonymous'
-      }
+      decl.defaultRoles.forEach((dr) => {
+        if (pkg.roles[dr]) fail('Role ' + dr + ' yet exists')
+      })
       return { processes }
     }
     function processes (expr1: CallExpression) {
@@ -234,7 +233,7 @@ export function loadWorkspace (ws: def.Workspace) {
       const args = expr1.getArguments()
       if (args.length !== 1) fail(expr1.getSourceFile().getFilePath() + ' routes precisa de um parametro')
       pkg.routes = parseObjArg(args[0])
-      return { }      
+      return {}
     }
   }
 }

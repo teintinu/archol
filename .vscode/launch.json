@@ -6,6 +6,9 @@
       "request": "launch",
       "name": "Debug - Archol Builder",
       "program": "${workspaceFolder}/builder/index.ts",
+      "args": [
+        "${workspaceFolder}/ws"
+      ],
       "preLaunchTask": "tsc: build - tsconfig.json",
       "outFiles": [
         "${workspaceFolder}/.temp/dist/builder/**/*.js"
