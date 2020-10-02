@@ -10,8 +10,8 @@ export const quasarNodeTsx: BuilderImpl = {
     await generate(join(ws.rootDir, info.config.rootDir, '/client'), { isClient: true })
 
     async function generate (appDir: string, { }: { isServer?: boolean, isClient?: boolean }) {
-      const w = createSourceWriter(appDir + '/arch.ts')
-      w.writeln('import { Type, Document, Process, DocIdentification } from \'../archollib\'')
+      const w = createSourceWriter(appDir + '/arch/def.ts')
+      w.writeln('import { Type, Document, Process, DocumentIdentificationGUID } from \'./decl\'')
 
       app.packageList.forEach(savePackage)
 
@@ -33,20 +33,24 @@ export const quasarNodeTsx: BuilderImpl = {
       }
 
       function saveAST<T> (obj: T, thistype: string, prop: keyof T) {
-        const ast: Ast = obj[prop] as any
-        if (ast) {
-          const m = ast.func
-          const params = m.getParameters().map((p) => p.getName() + ':' + p.getType().getText())
-          if (thistype) params.unshift('this: ' + thistype)
-          const code = m.getBodyText()
-          if (code) {
-            w.writeln((m.getAsyncKeyword() ? 'async ' : '') + m.getName() + '(' + params.join(',') + '): ' + m.getReturnType().getText() + ' {');
-            w.ident()
-            w.writeln(code)
-            w.identBack()
-            w.writeln('}')
-          } else fail('AST inválido')
-        }
+        let ast: Ast = obj[prop] as any
+        if (!ast) fail(prop + ': has no ast')
+        const m = ast.func
+        const params = m.getParameters().map((p) => p.getName() + ':' + p.getType().getText())
+        if (thistype) params.unshift('this: ' + thistype)
+        const code: string = m.getBodyText() as any
+        if (!code) fail(prop + ': has no code')
+        w.writeln(
+          (m.getAsyncKeyword() ? 'async ' : '')
+          + prop
+          + '('
+          + params.join(',') +
+          '): ' + m.getReturnType().getText()
+          + ' {');
+        w.ident()
+        w.writeln(code)
+        w.identBack()
+        w.writeln('},')
       }
 
       function vboolean (b: boolean) {
@@ -60,11 +64,11 @@ export const quasarNodeTsx: BuilderImpl = {
         saveProcesses()
 
         function saveGlobals () {
-          w.writeln('export const identificationGUID: DocIdentification = {')
-          w.ident()
-          w.writeln('gen: \'TODO\'')
-          w.identBack()
-          w.writeln('}')
+          // w.writeln('export const identificationGUID: DocIdentification = {')
+          // w.ident()
+          // w.writeln('gen: \'TODO\'')
+          // w.identBack()
+          // w.writeln('}')
         }
 
         function saveProcesses () {
@@ -135,7 +139,7 @@ export const quasarNodeTsx: BuilderImpl = {
             w.ident()
             w.writeln('dId: \'' + d.getMappedId(app) + '\',')
             w.writeln('uri: \'' + pkg.uri.full + '/' + d.name + '\',')
-            w.writeln('identification: identification' + d.identification + ',')
+            w.writeln('identification: DocumentIdentification' + d.identification + ',')
             w.writeln('volatile: ' + vboolean(d.persistence === 'session') + ',')
             w.writeln('states: [' + d.states.map((st) => 's' + st.name).join(',') + '],')
             w.writeln('fields: [' + d.fields.map((f) => 'f' + f.name).join(',') + '],')

@@ -1,7 +1,4 @@
-import { Type, Document, Process, DocIdentification } from '../archollib'
-export const identificationGUID: DocIdentification = {
-  gen: 'TODO'
-}
+import { Type, Document, Process, DocumentIdentificationGUID } from './decl'
 
 export const partnomeType = {
   tId: 'partnomeType',
@@ -10,7 +7,13 @@ export const partnomeType = {
   validate(this: void,val:string): false | "parte de nome inválida" {
     if (! /^\w+/g.test(val)) return 'parte de nome inválida'
     return false
-  }
+  },
+  format(this: void,val:string): string {
+    return val
+  },
+  parse(this: void,txt:string): string {
+    return txt
+  },
 }
 export const allTypes: Type[] = [partnomeType]
 
@@ -46,7 +49,7 @@ export const nomesDoc = (()=> {
   return {
     dId: 'nomesDoc',
     uri: 'test.archol.com/hw/nomes',
-    identification: identificationGUID,
+    identification: DocumentIdentificationGUID,
     volatile: true,
     states: [spartial,scomplete],
     fields: [ffname,flname],
@@ -83,7 +86,7 @@ export const nomesDoc = (()=> {
         },
         async run(this: InomesDoc,fn:string): Promise<void> {
           this.fname = fn
-        }
+        },
       },
       {
         name: 'finishHw',
@@ -95,7 +98,7 @@ export const nomesDoc = (()=> {
         },
         async run(this: InomesDoc,ln:string): Promise<void> {
           this.lname = ln
-        }
+        },
       },
     ],
   }

@@ -1,7 +1,8 @@
 import * as decl from './typesDecl'
-import { FunctionDeclaration, MethodDeclaration } from 'ts-morph'
+import { FunctionDeclaration, MethodDeclaration, ObjectLiteralExpression, Project, VariableDeclaration, VariableStatement } from 'ts-morph'
 import '@hoda5/extensions'
 import { defaultTypes } from './defaults'
+import { basename } from 'path'
 
 export interface Application {
   name: string
@@ -153,7 +154,7 @@ interface ProcessVars {
 
 export type NextTask = {
   task: UseTask
-  condition?: Ast
+  condition: Ast | false
 }
 
 export interface Task {
@@ -442,9 +443,9 @@ async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang) {
         const t: Type = {
           name: n,
           base: d.base,
-          validate: d.validate,
-          parse: d.parse,
-          format: d.format,
+          validate: vast(d, 'validate', 'validate(): boolean { return false }'),
+          parse: vast(d, 'parse', 'parse(txt: string): ' + d.base + ' { return txt }'),
+          format: vast(d, 'format', 'format(val: ' + d.base + '): string { return val }'),
           ...vmappable(n + '.type')
         }
         return t
@@ -507,16 +508,16 @@ async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang) {
           function vnexttask (n: decl.NextTask | decl.NextTask[]) {
             if (typeof n === 'string') {
               ret.push({
-                task: vtaskuse(declTask, n)
+                task: vtaskuse(declTask, n),
+                condition: false
               })
             } else if (Array.isArray(n)) {
               n.forEach(vnexttask)
             } else {
               for (const forkname of Object.keys(n)) {
-                const cond = n[forkname]
                 ret.push({
                   task: vtaskuse(n, forkname),
-                  condition: vast(n, cond)
+                  condition: vast(n, forkname, true)
                 })
               }
             }
@@ -778,7 +779,7 @@ async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang) {
             to: await vusedocstates(a, a.to),
             icon: vicon(a, 'icon'),
             description: vi18n(a, "description"),
-            run: vast(a, a.run)
+            run: vast(a, 'run', false)
           }
           return ret
         }))
@@ -807,8 +808,29 @@ async function defApp (ws: DefWorkspace, appname: string, onlyLang?: Lang) {
       }
     }
 
-    function vast (obj: any, source: false | decl.Ast): Ast {
-      return source as any
+    function vast<P extends object> (obj: P, prop: keyof P, def: string | boolean): Ast | false {
+      let source: Ast = obj[prop] as any
+
+      if (!source) {
+        if (def === true) return false
+        if (def === false) {
+          fail(obj, 'ast required ' + prop)
+          return false
+        }
+        try {
+          const tmp = new Project()
+          const tmpsrc = tmp.createSourceFile('tmp.ts', 'const obj={' + def + '}')
+          const stmt1: VariableStatement = tmpsrc.getStatements()[0] as any
+          const varobj: VariableDeclaration = stmt1 && stmt1.getDeclarations()[0]
+          const tmpobj: ObjectLiteralExpression = varobj && varobj.getInitializer() as any
+          const tmpprop: MethodDeclaration = tmpobj && tmpobj.getProperties()[0] as any
+          source = { func: tmpprop }
+        } catch (e) {
+          fail(obj, 'default ast error ' + e.toString())
+        }
+      }
+      if (source.func.getName() !== prop) fail(obj, [source.func.getName(), '!==', prop].join(' '))
+      return source
     }
   }
 
